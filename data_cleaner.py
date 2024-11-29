@@ -42,4 +42,8 @@ print('Il dataset finale ha', len(data), 'campioni')
 data.to_csv('dataset/International_Report.csv', index=False)
 
 #Converti il dataset in un file json
-data.to_json('dataset/International_Report.json', orient='records')
+#data.to_json('dataset/International_Report.json', orient='records', lines=True, indent=4)
+
+#Json è più compatto e leggibile, ma è molto pesante. Infatti per github ha dei problemi ad essere caricato.
+#Quindi o installiamo git lfs (per il caricamento di file pesanti su git) o usiamo il csv oppure droppiamo un po' di campioni
+
