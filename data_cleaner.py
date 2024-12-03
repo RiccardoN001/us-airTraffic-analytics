@@ -46,47 +46,57 @@ print('La differenza tra i dataset iniziali e quello finale è di',  len(passeng
 # Importo il dataset con i codici IATA degli aeroporti
 iata_codes = pd.read_csv('dataset/airport-codes.csv')
 
-iata_codes = iata_codes[['iata_code', 'continent', 'iso_country', 'iso_region']]# Seleziono solo le colonne IATA continent e iso_country
+iata_codes = iata_codes[['iata_code', 'name', 'iso_country', 'iso_region']]# Seleziono solo le colonne IATA continent e iso_country
 
 # Unisco il dataset IATA con il dataset principale per ottenere i nomi degli Stati
-data = pd.merge(data, iata_codes[['iata_code', 'iso_region']], left_on='US_Airport', right_on='iata_code', how='left')
+data = pd.merge(data, iata_codes[['iata_code', 'iso_region', 'name']], left_on='US_Airport', right_on='iata_code', how='left')
 data['US_State'] = np.where(data['iso_region'].str.startswith('US-'), data['iso_region'].str[3:], data['iso_region'])
+data = data.rename(columns={'name': 'US_Airport_Name'})
 data = data.drop(columns=['iata_code', 'iso_region'])
 
-data = pd.merge(data, iata_codes[['iata_code', 'iso_country']], left_on='FG_Airport', right_on='iata_code', how='left')
-data = data.rename(columns={'iso_country': 'FG_State'})
+data = pd.merge(data, iata_codes[['iata_code', 'iso_country', 'name']], left_on='FG_Airport', right_on='iata_code', how='left')
+data = data.rename(columns={'iso_country': 'FG_State', 'name': 'FG_Airport_Name'})
 data = data.drop(columns=['iata_code'])
 
-# Riordina le colonne per posizionare US_State dopo US_Airport e FG_State dopo FG_Airport
+#pycountry è una libreria che permette di ottenere il nome completo di uno Stato partendo dal codice ISO
+
+# Riordina le colonne per posizionare US_State dopo US_Airport e poi name
 cols = data.columns.tolist()
 us_airport_index = cols.index('US_Airport')
 cols.insert(us_airport_index + 1, cols.pop(cols.index('US_State')))
+cols.insert(us_airport_index + 2, cols.pop(cols.index('US_Airport_Name')))
 
 fg_airport_index = cols.index('FG_Airport')
 cols.insert(fg_airport_index + 1, cols.pop(cols.index('FG_State')))
+cols.insert(fg_airport_index + 2, cols.pop(cols.index('FG_Airport_Name')))
 
 data = data[cols]
-
 
 #Ora voglio fare in modo che le tratte rispetto agli aeroporti siano uniche, quindi raggruppo per compagnia aerea sommando i voli e i passeggeri per poi cancellare la colonna Airline
 data = data.drop(columns=['Airline','Month'])
 
 # Raggruppa per le colonne specificate e somma i valori di 'Passengers' e 'Flights'
-data = data.groupby(['Year', 'US_Airport', 'US_State', 'FG_Airport', 'FG_State'], as_index=False).agg({
+data = data.groupby(['Year', 'US_Airport','US_Airport_Name' ,'US_State', 'FG_Airport', 'FG_State', 'FG_Airport_Name'], as_index=False).agg({
     'Passengers': 'sum',
     'Flights': 'sum'
 })
+
+#drop dei campioni che hanno meno di un tot di passeggeri
+data = data.drop(data[(data['Passengers'] < 100) | (data['Flights'] < 10)].index)
 
 
 print(data.head())
 
 print('Il dataset finale ha', len(data), 'campioni')
 
+#Quanti aeroporti diversi ci sono in US_Airport
+print('Ci sono', len(data['US_Airport'].unique()), 'aeroporti negli Stati Uniti')
+
 #Salva il dataset finale in un file csv
 data.to_csv('dataset/International_Report.csv', index=False)
 
 #Converti il dataset in un file json
-#data.to_json('dataset/International_Report.json', orient='records', lines=True, indent=4)
+data.to_json('dataset/International_Report.json', orient='records', indent=4)
 
 #Json è più compatto e leggibile, ma è molto pesante. Infatti per github ha dei problemi ad essere caricato.
 #Quindi o installiamo git lfs (per il caricamento di file pesanti su git) o usiamo il csv oppure droppiamo un po' di campioni
