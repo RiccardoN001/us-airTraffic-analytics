@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+import pycountry as pc
+import json
+
 
 # Importa i due dataset dalla cartella dataset
 departures = pd.read_csv('dataset/International_Report_Departures.csv')
@@ -24,12 +27,12 @@ passengers = pd.read_csv('dataset/International_Report_Passengers.csv')
 #Scheduled e Charter sono le due tipologie di voli, ma sono sommate in Total (semplificazione)
 #usg_wac e fg_wac sono codici IATA delle zone mondiali, ma le implemento con i codici IATA degli aeroporti
 #airlineid è un dato ridondante con carrier
-departures = departures.drop(columns=['data_dte', 'usg_apt_id', 'fg_apt_id', 'type', 'carriergroup', 'Scheduled', 'Charter', 'usg_wac', 'fg_wac', 'airlineid'], axis=1)
-passengers = passengers.drop(columns=['data_dte', 'usg_apt_id', 'fg_apt_id', 'type', 'carriergroup', 'Scheduled', 'Charter', 'usg_wac', 'fg_wac', 'airlineid'], axis=1)
+departures = departures.drop(columns=['data_dte', 'usg_apt_id', 'fg_apt_id', 'type', 'carriergroup', 'Total', 'Charter', 'usg_wac', 'fg_wac', 'airlineid'], axis=1)
+passengers = passengers.drop(columns=['data_dte', 'usg_apt_id', 'fg_apt_id', 'type', 'carriergroup', 'Total', 'Charter', 'usg_wac', 'fg_wac', 'airlineid'], axis=1)
 
 # Rinomino le colonne per una migliore comprensione
-departures = departures.rename(columns={'usg_apt_id': 'US_Airport_id','usg_apt': 'US_Airport','fg_apt_id': 'FG_Airport_id', 'fg_apt': 'FG_Airport', 'carrier': 'Airline', 'Total': 'Flights'})
-passengers = passengers.rename(columns={'usg_apt_id': 'US_Airport_id','usg_apt': 'US_Airport','fg_apt_id': 'FG_Airport_id', 'fg_apt': 'FG_Airport', 'carrier': 'Airline', 'Total': 'Passengers'})
+departures = departures.rename(columns={'usg_apt_id': 'US_Airport_id','usg_apt': 'US_Airport','fg_apt_id': 'FG_Airport_id', 'fg_apt': 'FG_Airport', 'carrier': 'Airline', 'Scheduled': 'Flights'})
+passengers = passengers.rename(columns={'usg_apt_id': 'US_Airport_id','usg_apt': 'US_Airport','fg_apt_id': 'FG_Airport_id', 'fg_apt': 'FG_Airport', 'carrier': 'Airline', 'Scheduled': 'Passengers'})
 
 print(departures.head())
 print(passengers.head())
@@ -44,60 +47,86 @@ print('La differenza tra i dataset iniziali e quello finale è di',  len(passeng
 
 #US_Ariport e FG_Airport sono codici IATA, essi corrisspondono a un aeroporto specifico in un determinato Stato. Voglio creare una colonna con il nome dello Stato
 # Importo il dataset con i codici IATA degli aeroporti
-iata_codes = pd.read_csv('dataset/airport-codes.csv')
 
-iata_codes = iata_codes[['iata_code', 'name', 'iso_country', 'iso_region']]# Seleziono solo le colonne IATA continent e iso_country
+iata_codes = pd.read_csv('dataset/iata_codes.csv')
 
-# Unisco il dataset IATA con il dataset principale per ottenere i nomi degli Stati
-data = pd.merge(data, iata_codes[['iata_code', 'iso_region', 'name']], left_on='US_Airport', right_on='iata_code', how='left')
-data['US_State'] = np.where(data['iso_region'].str.startswith('US-'), data['iso_region'].str[3:], data['iso_region'])
-data = data.rename(columns={'name': 'US_Airport_Name'})
-data = data.drop(columns=['iata_code', 'iso_region'])
+#Fai un merge tra data e iata_codes per ottenere il nome degli Stati, usando come chiave di join le colonne US_Airport e FG_Airport
+data = pd.merge(data, iata_codes, left_on='US_Airport', right_on='iata_code', how='inner')
+data = data.rename(columns={'Country_Name': 'US_State', 'Country_Code': 'US_State_id', 'Continent': 'US_Continent'})
+data = data.drop(columns=['iata_code'], axis=1)
 
-data = pd.merge(data, iata_codes[['iata_code', 'iso_country', 'name']], left_on='FG_Airport', right_on='iata_code', how='left')
-data = data.rename(columns={'iso_country': 'FG_State', 'name': 'FG_Airport_Name'})
-data = data.drop(columns=['iata_code'])
+data = pd.merge(data, iata_codes, left_on='FG_Airport', right_on='iata_code', how='inner')
+data = data.rename(columns={'Country_Name': 'FG_State', 'Country_Code': 'FG_State_id', 'Continent': 'FG_Continent'})
+data = data.drop(columns=['iata_code'], axis=1)
 
-#pycountry è una libreria che permette di ottenere il nome completo di uno Stato partendo dal codice ISO
+# Lista con l'ordine desiderato delle colonne
+column_order = [
+    'Year', 'Month', 'US_Airport', 'US_State', 'US_State_id', 'US_Continent', 
+    'FG_Airport', 'FG_State', 'FG_State_id', 'FG_Continent', 'Flights', 'Passengers'
+]
 
-# Riordina le colonne per posizionare US_State dopo US_Airport e poi name
-cols = data.columns.tolist()
-us_airport_index = cols.index('US_Airport')
-cols.insert(us_airport_index + 1, cols.pop(cols.index('US_State')))
-cols.insert(us_airport_index + 2, cols.pop(cols.index('US_Airport_Name')))
+# Riordina il DataFrame
+data = data[column_order]
 
-fg_airport_index = cols.index('FG_Airport')
-cols.insert(fg_airport_index + 1, cols.pop(cols.index('FG_State')))
-cols.insert(fg_airport_index + 2, cols.pop(cols.index('FG_Airport_Name')))
 
-data = data[cols]
 
 #Ora voglio fare in modo che le tratte rispetto agli aeroporti siano uniche, quindi raggruppo per compagnia aerea sommando i voli e i passeggeri per poi cancellare la colonna Airline
-data = data.drop(columns=['Airline','Month'])
+data = data.drop(columns=['US_Airport', 'FG_Airport'])
 
 # Raggruppa per le colonne specificate e somma i valori di 'Passengers' e 'Flights'
-data = data.groupby(['Year', 'US_Airport','US_Airport_Name' ,'US_State', 'FG_Airport', 'FG_State', 'FG_Airport_Name'], as_index=False).agg({
+data = data.groupby(['Year','Month', 'US_State' ,'US_State_id', 'US_Continent', 'FG_State', 'FG_State_id', 'FG_Continent'], as_index=False).agg({
     'Passengers': 'sum',
     'Flights': 'sum'
 })
 
-#drop dei campioni che hanno meno di un tot di passeggeri
-data = data.drop(data[(data['Passengers'] < 100) | (data['Flights'] < 10)].index)
+#drop dei campioni che hanno meno di un tot di passeggeri o voli
+data = data.drop(data[(data['Passengers'] < 100) | (data['Flights'] < 4)].index)
 
 
 print(data.head())
 
 print('Il dataset finale ha', len(data), 'campioni')
 
-#Quanti aeroporti diversi ci sono in US_Airport
-print('Ci sono', len(data['US_Airport'].unique()), 'aeroporti negli Stati Uniti')
-
 #Salva il dataset finale in un file csv
 data.to_csv('dataset/International_Report.csv', index=False)
 
-#Converti il dataset in un file json
-data.to_json('dataset/International_Report.json', orient='records', indent=4)
 
-#Json è più compatto e leggibile, ma è molto pesante. Infatti per github ha dei problemi ad essere caricato.
-#Quindi o installiamo git lfs (per il caricamento di file pesanti su git) o usiamo il csv oppure droppiamo un po' di campioni
+#Voglio creare un file json suddiviso in nodi (che erappresentano gli Stati) e archi (che rappresentano le tratte)
+#Gli stati avranno come attributi il nome, il codice ISO e il continente
+#Le tratte avranno come attributi il numero di voli e passeggeri, l'aeroporto di partenza e di arrivo e l'anno e mese
+# Crea una lista di nodi unici (stati)
+nodes = []
+for state in pd.concat([data['US_State'], data['FG_State']]).unique():
+  country = pc.countries.get(name=state)
+  if country:
+    nodes.append({
+      'name': state,
+      'iso_code': country.alpha_3,
+      'continent': data[data['US_State'] == state]['US_Continent'].values[0] if state in data['US_State'].values else data[data['FG_State'] == state]['FG_Continent'].values[0]
+    })
+
+# Crea una lista di archi (tratte)
+edges = []
+for _, row in data.iterrows():
+  edges.append({
+    'source': row['US_State'],
+    'target': row['FG_State'],
+    'flights': row['Flights'],
+    'passengers': row['Passengers'],
+    'year': row['Year'],
+    'month': row['Month']
+  })
+
+
+# Crea il dizionario finale
+dataset = {
+  'nodes': nodes,
+  'edges': edges
+}
+
+print(len(dataset['nodes']), len(dataset['edges']))
+
+# Salva il dizionario in un file JSON
+with open('dataset/International_Report.json', 'w') as f:
+  json.dump(dataset, f, indent=3)
 
