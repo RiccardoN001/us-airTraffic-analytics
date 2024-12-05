@@ -46,6 +46,9 @@ print('La differenza tra i dataset iniziali e quello finale è di',  len(passeng
 # Importo il dataset con i codici IATA degli aeroporti
 iata_codes = pd.read_csv('dataset/iata_codes.csv')
 
+#rimuoivo i duplicati dal dataset iata_codes
+iata_codes = iata_codes.drop_duplicates(subset=['iata_code'])
+
 
 #Fai un merge tra data e iata_codes per ottenere il nome degli Stati, usando come chiave di join le colonne US_Airport e FG_Airport
 data = pd.merge(data, iata_codes, left_on='US_Airport', right_on='iata_code', how='inner')
@@ -74,7 +77,7 @@ data = data.groupby(['Year','Month', 'US_State' ,'US_State_id', 'US_Continent', 
 
 
 #drop dei campioni che hanno meno di un tot di passeggeri o voli
-data = data.drop(data[(data['Passengers'] < 100) | (data['Flights'] < 4)].index)
+#data = data.drop(data[(data['Passengers'] < 100) | (data['Flights'] < 4)].index)
 
 
 #Verifica del dataset finale (head, lunghezza e valori nulli)
