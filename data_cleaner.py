@@ -85,6 +85,13 @@ data = data.drop(data[(data['Passengers'] == 0) | (data['Flights'] == 0)].index)
 #conta gli stati US_state_id unici
 print('Ci sono', len(data['US_State_id'].unique()), 'stati negli Stati Uniti')
 
+#stampa il numero di passeggeri minimo e massimo di tutti i collegamenti
+print('Il numero minimo di passeggeri è', data['Passengers'].min())
+print('Il numero massimo di passeggeri è', data['Passengers'].max())
+#stampa il numero di voli minimo e massimo di tutti i collegamenti
+print('Il numero minimo di voli è', data['Flights'].min())
+print('Il numero massimo di voli è', data['Flights'].max())
+
 #Verifica del dataset finale (head, lunghezza e valori nulli)
 print(data.head())
 
