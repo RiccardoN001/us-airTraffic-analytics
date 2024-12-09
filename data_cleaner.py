@@ -38,6 +38,7 @@ passengers = passengers.rename(columns={'usg_apt_id': 'US_Airport_id','usg_apt':
 #L'inner join è usato per mantenere solo le righe che hanno corrispondenze in entrambi i dataset
 data = pd.merge(departures, passengers, on=['Year', 'Month', 'US_Airport', 'FG_Airport', 'Airline'], how='inner')
 
+
 #Quantifica la differenza tra i dataset iniziali e quello finale (significa che ci sono delle righe che non hanno corrispondenze)
 print('La differenza tra i dataset iniziali e quello finale è di',  len(passengers) - len(data), 'righe')
 
@@ -54,6 +55,8 @@ iata_codes = iata_codes.drop_duplicates(subset=['iata_code'])
 data = pd.merge(data, iata_codes, left_on='US_Airport', right_on='iata_code', how='inner')
 data = data.rename(columns={'Country_Name': 'US_State', 'Country_Code': 'US_State_id', 'Continent': 'US_Continent'})
 data = data.drop(columns=['iata_code'], axis=1)
+#rimuovi tutti i campioni che hanno us_state_id che non inizia con 'US-'
+data = data.drop(data[~data['US_State_id'].str.startswith('US-')].index)
 
 data = pd.merge(data, iata_codes, left_on='FG_Airport', right_on='iata_code', how='inner')
 data = data.rename(columns={'Country_Name': 'FG_State', 'Country_Code': 'FG_State_id', 'Continent': 'FG_Continent'})
@@ -77,8 +80,10 @@ data = data.groupby(['Year','Month', 'US_State' ,'US_State_id', 'US_Continent', 
 
 
 #drop dei campioni che hanno meno di un tot di passeggeri o voli
-#data = data.drop(data[(data['Passengers'] < 100) | (data['Flights'] < 4)].index)
+data = data.drop(data[(data['Passengers'] == 0) | (data['Flights'] == 0)].index)
 
+#conta gli stati US_state_id unici
+print('Ci sono', len(data['US_State_id'].unique()), 'stati negli Stati Uniti')
 
 #Verifica del dataset finale (head, lunghezza e valori nulli)
 print(data.head())
