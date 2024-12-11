@@ -1,32 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Visualizzazione interattiva della mappa del traffico aereo internazionale.">
-    <title>D3 Map Visualization</title>
-    
-    <!-- Foglio di stile personalizzato -->
-    <link href="style/style.css" rel="stylesheet">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            name="description"
+            content="Visualizzazione interattiva della mappa del traffico aereo internazionale."
+        />
+        <title>D3 Map Visualization</title>
 
-    <!-- Caricamento di D3.js e librerie correlate -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-    <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
-</head>
-<body>
-    <!-- Contenitore responsive per la mappa -->
-    <div class="responsive-svg-container">
-        <svg id="map"></svg>
-    </div>
+        <!-- Foglio di stile personalizzato -->
+        <link href="style/style.css" rel="stylesheet" />
 
-    <script src="scripts/map.js"></script>
-    <script src="scripts/slider.js"></script>
-    <script src="scripts/hoverInteraction.js"></script>
-    <script src="scripts/panningInteraction.js"></script>
-    <script>
-        // Inizializzazione della mappa
-        initializeMap();
-    </script>
-</body>
+        <!-- Caricamento di D3.js e librerie correlate -->
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+        <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+    </head>
+    <body>
+        <!-- Contenitore responsive per la mappa -->
+        <div class="responsive-svg-container">
+            <svg id="map"></svg>
+        </div>
+
+        <script src="scripts/map.js"></script>
+        <script src="scripts/slider.js"></script>
+    </body>
 </html>

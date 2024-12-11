@@ -1,58 +1,71 @@
-
 // Ottieni larghezza e altezza del contenitore
-function initializeMap() {
-    let width = document.querySelector(".responsive-svg-container").clientWidth;
-    let height = document.querySelector(".responsive-svg-container").clientHeight;
+let width = document.querySelector(".responsive-svg-container").clientWidth;
+let height = document.querySelector(".responsive-svg-container").clientHeight;
 
-    const svg = d3
+// Crea l'SVG
+const svg = d3
     .select("#map")
     .attr("viewBox", `0 0 ${width} ${height}`)
     .style("border", "1px solid black");
 
+// Definisci la proiezione centrata sull'America
+let projection = d3
+    .geoMercator()
+    .scale(width / 6)
+    .translate([width / 2, height / 2]);
 
-    const projection = d3.geoMercator()
-        .scale(width / 6) // Scala la mappa in base alla larghezza del contenitore
-        .rotate([100, 0]) // Ruota di 100 gradi longitudine verso est
-        .translate([width / 2, height / 2 +120]); // Trasla la mappa al centro del contenitore e leggermente verso l'alto
-    
-    // Crea un path generator
-    const path = d3.geoPath().projection(projection);
+// Crea un path generator
+const path = d3.geoPath().projection(projection);
 
-
-    // Carica i dati GeoJSON del mondo
-    // Carica i dati GeoJSON del mondo
-    d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson")
-    .then(data => {
-        // Disegna la mappa mondiale
-        svg.selectAll(".world")
-        .data(data.features)
-        .enter()
-        .append("path")
-        .attr("class", "world")
-        .attr("d", path)
-        .attr("fill", "#b3cde0")
-        .attr("stroke", "#03396c")
-        .attr("stroke-width", 0.5);
-    })
-    .catch(error => console.error("Errore nel caricamento dei dati mondiali:", error));
-
-    // Carica i dati GeoJSON degli stati americani
-    d3.json("../dataset/us-states.geojson.json")
-    .then(data => {
-        // Disegna la mappa degli stati americani
-        svg.selectAll(".us-states")
-        .data(data.features)
-        .enter()
-        .append("path")
-        .attr("class", "us-states")
-        .attr("d", path)
-        .attr("fill", "#b3cde0")
-        .attr("stroke", "#03396c")
-        .attr("stroke-width", 0.5);
-    })
-    .catch(error => console.error("Errore nel caricamento dei dati degli stati americani:", error));
+// Funzione per il comportamento di zoom e trascinamento
+function zoomed(event) {
+    const { transform } = event;
+    svg.selectAll("path").attr("transform", transform);
 }
 
+// Funzione per il panning continuo orizzontale e spanning verticale simulato
+function continuousPan(event) {
+    const dx = event.dx;
+    const dy = event.dy;
+
+    // Calcola nuova rotazione per il panning orizzontale
+    const rotate = projection.rotate();
+    rotate[0] += dx / 4; // Movimento orizzontale continuo
+    projection.rotate(rotate);
+
+    // Calcola nuova traslazione per lo spanning verticale
+    const translate = projection.translate();
+    let newY = translate[1] + dy;
+
+    // Limita lo spanning verticale
+    const maxVertical = height / 2 + 200;
+    const minVertical = height / 2 - 200;
+    newY = Math.max(minVertical, Math.min(maxVertical, newY));
+
+    projection.translate([translate[0], newY]);
+    svg.selectAll("path").attr("d", path);
+}
+
+// Carica i dati GeoJSON
+d3.json("../dataset/world-states.geojson.json")
+    .then((data) => {
+        // Disegna la mappa
+        svg.selectAll("path")
+            .data(data.features)
+            .enter()
+            .append("path")
+            .attr("d", path)
+            .attr("fill", "#b3cde0")
+            .attr("stroke", "#03396c")
+            .attr("stroke-width", 0.5);
+
+        // Aggiungi il comportamento di trascinamento
+        svg.call(d3.drag().on("drag", continuousPan));
+
+        // Aggiungi il comportamento di zoom
+        svg.call(d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed));
+    })
+    .catch((error) => console.error("Errore nel caricamento dei dati:", error));
 
 /*
 // Map and projection (americocentric, without cuts)
