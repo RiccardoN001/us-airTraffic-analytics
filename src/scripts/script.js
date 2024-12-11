@@ -1,10 +1,13 @@
-// SVG and dimensions
-var svg = d3.select("svg"),
-    width = window.innerWidth,
-    height = window.innerHeight;
 
-svg.attr("width", width)
-   .attr("height", height);
+const svg = d3
+.select(".responsive-svg-container")
+.append("svg")
+.attr("viewBox", "0 0 1200 530")
+.style("border", "1px solid black");
+
+//get width and height of the container
+let width = document.querySelector(".responsive-svg-container").clientWidth;
+let height = document.querySelector(".responsive-svg-container").clientHeight;
 
 // Map and projection (americocentric, without cuts)
 var projection = d3.geoMercator()
