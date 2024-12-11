@@ -12,7 +12,8 @@ const svg = d3
 let projection = d3
     .geoMercator()
     .scale(width / 6)
-    .translate([width / 2, height / 2]);
+    .translate([width / 2, height / 2 + 120]) // Trasla la mappa al centro del contenitore e leggermente verso l'alto
+    .rotate([100, 0]); // Ruota di 100 gradi longitudine verso est
 
 // Crea un path generator
 const path = d3.geoPath().projection(projection);
@@ -46,7 +47,7 @@ function continuousPan(event) {
     svg.selectAll("path").attr("d", path);
 }
 
-// Carica i dati GeoJSON
+// Carica i dati GeoJSON per la mappa del mondo
 d3.json("../dataset/world-states.geojson.json")
     .then((data) => {
         // Disegna la mappa
@@ -58,6 +59,24 @@ d3.json("../dataset/world-states.geojson.json")
             .attr("fill", "#b3cde0")
             .attr("stroke", "#03396c")
             .attr("stroke-width", 0.5);
+    })
+    .catch((error) =>
+        console.error("Errore nel caricamento dei dati del mondo:", error)
+    );
+
+// Carica i dati GeoJSON per i confini degli stati US
+d3.json("../dataset/us-states.geojson.json")
+    .then((data) => {
+        // Disegna i confini degli stati US
+        svg.selectAll(".us-states")
+            .data(data.features)
+            .enter()
+            .append("path")
+            .attr("class", "us-states")
+            .attr("d", path)
+            .attr("fill", "#b3cde0")
+            .attr("stroke", "#03396c")
+            .attr("stroke-width", 0.5);
 
         // Aggiungi il comportamento di trascinamento
         svg.call(d3.drag().on("drag", continuousPan));
@@ -65,7 +84,9 @@ d3.json("../dataset/world-states.geojson.json")
         // Aggiungi il comportamento di zoom
         svg.call(d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed));
     })
-    .catch((error) => console.error("Errore nel caricamento dei dati:", error));
+    .catch((error) =>
+        console.error("Errore nel caricamento dei dati degli stati US:", error)
+    );
 
 /*
 // Map and projection (americocentric, without cuts)
