@@ -1,56 +1,57 @@
 
 // Ottieni larghezza e altezza del contenitore
-let width = document.querySelector(".responsive-svg-container").clientWidth;
-let height = document.querySelector(".responsive-svg-container").clientHeight;
+function initializeMap() {
+    let width = document.querySelector(".responsive-svg-container").clientWidth;
+    let height = document.querySelector(".responsive-svg-container").clientHeight;
 
-const svg = d3
-  .select("#map")
-  .attr("viewBox", `0 0 ${width} ${height}`)
-  .style("border", "1px solid black");
-
-
-const projection = d3.geoMercator()
-    .scale(width / 6) // Scala la mappa in base alla larghezza del contenitore
-    .rotate([100, 0]) // Ruota di 100 gradi longitudine verso est
-    .translate([width / 2, height / 2 +120]); // Trasla la mappa al centro del contenitore e leggermente verso l'alto
-  
-// Crea un path generator
-const path = d3.geoPath().projection(projection);
+    const svg = d3
+    .select("#map")
+    .attr("viewBox", `0 0 ${width} ${height}`)
+    .style("border", "1px solid black");
 
 
-// Carica i dati GeoJSON del mondo
-// Carica i dati GeoJSON del mondo
-d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson")
-  .then(data => {
-    // Disegna la mappa mondiale
-    svg.selectAll(".world")
-      .data(data.features)
-      .enter()
-      .append("path")
-      .attr("class", "world")
-      .attr("d", path)
-      .attr("fill", "#b3cde0")
-      .attr("stroke", "#03396c")
-      .attr("stroke-width", 0.5);
-  })
-  .catch(error => console.error("Errore nel caricamento dei dati mondiali:", error));
+    const projection = d3.geoMercator()
+        .scale(width / 6) // Scala la mappa in base alla larghezza del contenitore
+        .rotate([100, 0]) // Ruota di 100 gradi longitudine verso est
+        .translate([width / 2, height / 2 +120]); // Trasla la mappa al centro del contenitore e leggermente verso l'alto
+    
+    // Crea un path generator
+    const path = d3.geoPath().projection(projection);
 
-// Carica i dati GeoJSON degli stati americani
-d3.json("../dataset/us-states.geojson.json")
-  .then(data => {
-    // Disegna la mappa degli stati americani
-    svg.selectAll(".us-states")
-      .data(data.features)
-      .enter()
-      .append("path")
-      .attr("class", "us-states")
-      .attr("d", path)
-      .attr("fill", "#b3cde0")
-      .attr("stroke", "#03396c")
-      .attr("stroke-width", 0.5);
-  })
-  .catch(error => console.error("Errore nel caricamento dei dati degli stati americani:", error));
 
+    // Carica i dati GeoJSON del mondo
+    // Carica i dati GeoJSON del mondo
+    d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson")
+    .then(data => {
+        // Disegna la mappa mondiale
+        svg.selectAll(".world")
+        .data(data.features)
+        .enter()
+        .append("path")
+        .attr("class", "world")
+        .attr("d", path)
+        .attr("fill", "#b3cde0")
+        .attr("stroke", "#03396c")
+        .attr("stroke-width", 0.5);
+    })
+    .catch(error => console.error("Errore nel caricamento dei dati mondiali:", error));
+
+    // Carica i dati GeoJSON degli stati americani
+    d3.json("../dataset/us-states.geojson.json")
+    .then(data => {
+        // Disegna la mappa degli stati americani
+        svg.selectAll(".us-states")
+        .data(data.features)
+        .enter()
+        .append("path")
+        .attr("class", "us-states")
+        .attr("d", path)
+        .attr("fill", "#b3cde0")
+        .attr("stroke", "#03396c")
+        .attr("stroke-width", 0.5);
+    })
+    .catch(error => console.error("Errore nel caricamento dei dati degli stati americani:", error));
+}
 
 
 /*
