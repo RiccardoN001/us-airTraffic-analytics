@@ -1,10 +1,4 @@
-.responsive-svg-container {
-    margin-right: auto;
-    margin-left: auto;
+.responsive-svg-container, #map {
     width: 100%;
-    max-width: 1200px;
-  }
-  
-  rect {
-    fill: orange;
+    height: 100%;
   }

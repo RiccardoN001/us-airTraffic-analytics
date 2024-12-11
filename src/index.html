@@ -3,26 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D3 Map</title>
-    <link rel="stylesheet" href="./src/style/style.css">
+    <meta name="description" content="Visualizzazione interattiva della mappa del traffico aereo internazionale.">
+    <title>D3 Map Visualization</title>
+    
+    <!-- Foglio di stile personalizzato -->
+    <link href="style/style.css" rel="stylesheet">
 
-    <!-- Load D3.js -->
-    <script src="http://d3js.org/d3.v4.js"></script>
+    <!-- Caricamento di D3.js e librerie correlate -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
     <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
-
-    <style>
-        /* Add some CSS styling */
-
-    </style>
 </head>
 <body>
-    <!-- SVG container for the map -->
-    <div class ="responsive-svg-container"></div>
+    <!-- Contenitore responsive per la mappa -->
+    <div class="responsive-svg-container">
+        <svg id="map"></svg>
+    </div>
 
-    <!-- Link to the external JavaScript file -->
-    <script src="./scripts/script.js"></script>
-    <script src="./src/slider.js"></script>
+    <script src="scripts/script.js"></script>
 </body>
 </html>
-

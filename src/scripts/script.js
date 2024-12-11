@@ -1,14 +1,37 @@
-
 const svg = d3
-.select(".responsive-svg-container")
-.append("svg")
-.attr("viewBox", "0 0 1200 530")
-.style("border", "1px solid black");
+  .select("#map")
+  .attr("viewBox", "0 0 1200 530")
+  .style("border", "1px solid black");
 
-//get width and height of the container
+// Ottieni larghezza e altezza del contenitore
 let width = document.querySelector(".responsive-svg-container").clientWidth;
 let height = document.querySelector(".responsive-svg-container").clientHeight;
 
+const projection = d3.geoMercator()
+  .center([0, 20])          // Centra la mappa (longitudine, latitudine)
+  
+  
+
+// Crea un path generator
+const path = d3.geoPath().projection(projection);
+
+// Carica i dati GeoJSON del mondo
+d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson")
+  .then(data => {
+    // Disegna la mappa
+    svg.selectAll("path")
+      .data(data.features)
+      .enter()
+      .append("path")
+      .attr("d", path)
+      .attr("fill", "#b3cde0")
+      .attr("stroke", "#03396c")
+      .attr("stroke-width", 0.5);
+  })
+  .catch(error => console.error("Errore nel caricamento dei dati:", error));
+
+
+/*
 // Map and projection (americocentric, without cuts)
 var projection = d3.geoMercator()
     .scale(width / 6)
@@ -182,3 +205,5 @@ window.addEventListener("resize", () => {
     worldGroup.selectAll("path").attr("d", path);
     statesGroup.selectAll("path").attr("d", path);
 });
+
+*/
