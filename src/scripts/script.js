@@ -1,14 +1,18 @@
-const svg = d3
-  .select("#map")
-  .attr("viewBox", "0 0 1200 530")
-  .style("border", "1px solid black");
 
 // Ottieni larghezza e altezza del contenitore
 let width = document.querySelector(".responsive-svg-container").clientWidth;
 let height = document.querySelector(".responsive-svg-container").clientHeight;
 
+const svg = d3
+  .select("#map")
+  .attr("viewBox", `0 0 ${width} ${height}`)
+  .style("border", "1px solid black");
+
+
 const projection = d3.geoMercator()
-  .center([0, 20])          // Centra la mappa (longitudine, latitudine)
+    .scale(width / 6)         // Scala la mappa in base alla larghezza del contenitore
+    .center([0, 20])          // Centra la mappa (longitudine, latitudine)
+    .translate([width / 2, height / 2]); // Trasla la mappa al centro del contenitore
   
   
 
