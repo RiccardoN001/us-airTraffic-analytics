@@ -19,41 +19,15 @@ let projection = d3
 // Crea un path generator
 const path = d3.geoPath().projection(projection);
 
-const zoomBehavior = d3.zoom()
-    .scaleExtent([1, 8]) // Limita lo zoom minimo e massimo
-    .on("zoom", zoomed); // Funzione per applicare lo zoom
-
-svg.call(zoomBehavior);
-
-// Funzione per il comportamento di zoom e trascinamento
-function zoomed(event) {
-    const { transform } = event;
-    svg.selectAll("path").attr("transform", transform);
-}
-
-// Funzione per il panning continuo orizzontale e spanning verticale simulato
-function continuousPan(event) {
-    const dx = event.dx;
-    const dy = event.dy;
-
-    // Calcola nuova rotazione per il panning orizzontale
-    const rotate = projection.rotate();
-    rotate[0] += dx / 4; // Movimento orizzontale continuo
-    projection.rotate(rotate);
-
-    // Calcola nuova traslazione per lo spanning verticale
-    const translate = projection.translate();
-    let newY = translate[1] + dy;
-
-    // Limita lo spanning verticale
-    const maxVertical = height / 2 + 200;
-    const minVertical = height / 2 - 200;
-    newY = Math.max(minVertical, Math.min(maxVertical, newY));
-
-    projection.translate([translate[0], newY]);
-    svg.selectAll("path").attr("d", path);
-}
-
+const zoom = d3.zoom()
+    .scaleExtent([1, 8]) // Limita il livello di zoom
+    .translateExtent([
+        [-width /42.5 , -height / 3],  // Estendi i limiti a sinistra e sopra
+        [width + width / 42.5, height + height / 2]  // Estendi i limiti a destra e sotto
+    ])
+    .on("zoom", (event) => {
+        svg.selectAll("path").attr("transform", event.transform);
+    });
 
 /////////////////////////////////////////////CHOROPLETH MAP//////////////////////////////////////////////////////////////
 // Carica i dati GeoJSON per la mappa del mondo
@@ -128,9 +102,7 @@ function calculateDegrees() {
 
 
 let selectedStatesArray = new Array();
-//zoomToAmerica();
-var path1= d3.geoPath()
-    .projection(projection)
+
 // Carica i dati GeoJSON per i confini degli stati US
 d3.json("../dataset/us-states.geojson.json")
     .then((data) => {
@@ -210,10 +182,7 @@ d3.json("../dataset/us-states.geojson.json")
                 }
             });
           
-            svg.call(d3.drag().on("drag", continuousPan));
-
-            // Aggiungi il comportamento di zoom
-            svg.call(d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed));
+            svg.call(zoom);
         })
         .catch(error => console.error("Errore nel caricamento dei dati degli stati americani:", error));
 
