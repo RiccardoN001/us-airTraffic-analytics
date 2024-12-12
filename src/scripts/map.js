@@ -2,6 +2,7 @@
 let width = document.querySelector(".responsive-svg-container").clientWidth;
 let height = document.querySelector(".responsive-svg-container").clientHeight;
 
+
 // Crea l'SVG
 const svg = d3
     .select("#map")
@@ -17,6 +18,12 @@ let projection = d3
 
 // Crea un path generator
 const path = d3.geoPath().projection(projection);
+
+const zoomBehavior = d3.zoom()
+    .scaleExtent([1, 8]) // Limita lo zoom minimo e massimo
+    .on("zoom", zoomed); // Funzione per applicare lo zoom
+
+svg.call(zoomBehavior);
 
 // Funzione per il comportamento di zoom e trascinamento
 function zoomed(event) {
@@ -47,6 +54,8 @@ function continuousPan(event) {
     svg.selectAll("path").attr("d", path);
 }
 
+
+/////////////////////////////////////////////CHOROPLETH MAP//////////////////////////////////////////////////////////////
 // Carica i dati GeoJSON per la mappa del mondo
 d3.json("../dataset/world-states.geojson.json")
     .then((data) => {
@@ -64,68 +73,64 @@ d3.json("../dataset/world-states.geojson.json")
         console.error("Errore nel caricamento dei dati del mondo:", error)
     );
 
-//dati fittizi per gli stati US
-const fakeData = {
-    "Alabama": Math.random() * 100,
-    "Alaska": Math.random() * 100,
-    "Arizona": Math.random() * 100,
-    "Arkansas": Math.random() * 100,
-    "California": Math.random() * 100,
-    "Colorado": Math.random() * 100,
-    "Connecticut": Math.random() * 100,
-    "Delaware": Math.random() * 100,
-    "Florida": Math.random() * 100,
-    "Georgia": Math.random() * 100,
-    "Hawaii": Math.random() * 100,
-    "Idaho": Math.random() * 100,
-    "Illinois": Math.random() * 100,
-    "Indiana": Math.random() * 100,
-    "Iowa": Math.random() * 100,
-    "Kansas": Math.random() * 100,
-    "Kentucky": Math.random() * 100,
-    "Louisiana": Math.random() * 100,
-    "Maine": Math.random() * 100,
-    "Maryland": Math.random() * 100,
-    "Massachusetts": Math.random() * 100,
-    "Michigan": Math.random() * 100,
-    "Minnesota": Math.random() * 100,
-    "Mississippi": Math.random() * 100,
-    "Missouri": Math.random() * 100,
-    "Montana": Math.random() * 100,
-    "Nebraska": Math.random() * 100,
-    "Nevada": Math.random() * 100,
-    "New Hampshire": Math.random() * 100,
-    "New Jersey": Math.random() * 100,
-    "New Mexico": Math.random() * 100,
-    "New York": Math.random() * 100,
-    "North Carolina": Math.random() * 100,
-    "North Dakota": Math.random() * 100,
-    "Ohio": Math.random() * 100,
-    "Oklahoma": Math.random() * 100,
-    "Oregon": Math.random() * 100,
-    "Pennsylvania": Math.random() * 100,
-    "Rhode Island": Math.random() * 100,
-    "South Carolina": Math.random() * 100,
-    "South Dakota": Math.random() * 100,
-    "Tennessee": Math.random() * 100,
-    "Texas": Math.random() * 100,
-    "Utah": Math.random() * 100,
-    "Vermont": Math.random() * 100,
-    "Virginia": Math.random() * 100,
-    "Washington": Math.random() * 100,
-    "West Virginia": Math.random() * 100,
-    "Wisconsin": Math.random() * 100,
-    "Wyoming": Math.random() * 100
-};
 
-// Scala di colori
-const colorScale = d3.scaleSequential()
-    .domain([0, 100]) // Intervallo dati
+var states = new Array();
+var routes = new Array();
+d3.json("../../dataset/International_Report.json").then(function(jsonData) {
+     states = jsonData.nodes;
+     routes = jsonData.edges;
+     //calculateDegrees(); // Call calculateDegrees after data is loaded
+});
+
+let selectedTimeDegrees = {};
+//Creazione dizionario con i gradi di collegamenti
+function calculateDegrees() {
+    let selectedYear = document.getElementById("yearSlider").value;
+    let selectedMonth = document.getElementById("monthSlider").value;
+
+    console.log("Selected Year:", selectedYear);
+    console.log("Selected Month:", selectedMonth);
+
+    degree = routes.filter((route) => route.year == selectedYear && route.month == selectedMonth);
+
+    degree = degree.reduce((acc, { US_state, FG_state }) => {
+        // Aggiunge lo stato collegato al set associato allo stato americano
+        acc[US_state] = acc[US_state] || new Set();
+        acc[US_state].add(FG_state);
+        return acc;
+    }, {}); 
+
+    const selectedTimeDegrees = Object.fromEntries(
+        Object.entries(degree).map(([state, degree]) => [state, degree.size])
+    );
+
+    const colorScale = d3.scaleSequential()
+    .domain([0, Math.max(...Object.values(selectedTimeDegrees))/5]) // Intervallo dati
     .interpolator(d3.interpolateBlues);
+
+    svg.selectAll(".us-states")
+        .attr("fill", (d) => {
+            const stateName = d.properties.NAME; // Nome corretto dallo stato
+            const value = selectedTimeDegrees[stateName]; // Valore associato
+        
+            let fillColor = "white"; // Colore di default
+        
+            if (value != undefined && value != null) {
+                fillColor = colorScale(value); // Applica il colore dalla scala
+            }
+        
+            return fillColor;
+        });
+    console.log("Degrees:", selectedTimeDegrees);
+    console.log("Number of elements:", Object.keys(selectedTimeDegrees).length);
+    console.log("Degree massimo:", Math.max(...Object.values(selectedTimeDegrees)));
+}
 
 
 let selectedStatesArray = new Array();
-
+//zoomToAmerica();
+var path1= d3.geoPath()
+    .projection(projection)
 // Carica i dati GeoJSON per i confini degli stati US
 d3.json("../dataset/us-states.geojson.json")
     .then((data) => {
@@ -138,7 +143,7 @@ d3.json("../dataset/us-states.geojson.json")
             .attr("d", path)
             .attr("fill", (d) => {
                 const stateName = d.properties.NAME; // Nome corretto dallo stato
-                const value = fakeData[stateName]; // Valore associato
+                const value = selectedTimeDegrees[stateName]; // Valore associato
             
                 let fillColor = "white"; // Colore di default
             
@@ -186,25 +191,13 @@ d3.json("../dataset/us-states.geojson.json")
 
                     // Ripristina il colore originale
                     selectedState.attr("fill", "#b3cde0");
+                    selectedState.attr("stroke-width", 0.5);
 
                     console.log(selectedStatesArray.length);
 
                     if(selectedStatesArray.length == 0){
                         console.log("nessuno stato selezionato");
-                        //ripristina choropleth map
-                        svg.selectAll(".us-states")
-                            .attr("fill", (d) => {
-                                const stateName = d.properties.NAME; // Nome corretto dallo stato
-                                const value = fakeData[stateName]; // Valore associato
-                            
-                                let fillColor = "white"; // Colore di default
-                            
-                                if (value != undefined && value != null) {
-                                    fillColor = colorScale(value); // Applica il colore dalla scala
-                                }
-                            
-                                return fillColor;
-                            })
+                        calculateDegrees();
                     }
                 } 
                 else {
@@ -212,7 +205,8 @@ d3.json("../dataset/us-states.geojson.json")
 
                     // Verifica se lo stato è già evidenziato
                     const currentFill = selectedState.style("fill");
-                    selectedState.attr("fill", "red");
+                    selectedState.attr("fill", "red");                    
+
                 }
             });
           
@@ -222,37 +216,36 @@ d3.json("../dataset/us-states.geojson.json")
             svg.call(d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed));
         })
         .catch(error => console.error("Errore nel caricamento dei dati degli stati americani:", error));
+
+
+function zoomToAmerica() {
+    // Bounding box approssimativo dell'America
+    const americaBounds = [[-170, 10], [-50, 75]]; // [Sud-Ovest, Nord-Est]
+    const center = [
+        (americaBounds[0][0] + americaBounds[1][0]) / 2, // Longitudine media
+        (americaBounds[0][1] + americaBounds[1][1]) / 2  // Latitudine media
+    ];
+
+    // Calcola la scala e traslazione per centrare l'America
+    const newScale = width / 2; // Scala per zoom sull'America
+    const translateX = width / 2; // Centra orizzontalmente
+    const translateY = height / 2; // Centra verticalmente
+
+    // Usa la trasformazione di zoom per impostare il nuovo stato
+    svg.transition()
+        .duration(1000) // Durata della transizione
+        .call(
+            zoomBehavior.transform, // Applica la trasformazione
+            d3.zoomIdentity
+                .translate(translateX, translateY) // Traslazione
+                .scale(newScale) // Scala
+        );
+}
+        
         
 
+/////////////////////////////////////////////CHOROPLETH MAP//////////////////////////////////////////////////////////////
 /*
-// Map and projection (americocentric, without cuts)
-var projection = d3.geoMercator()
-    .scale(width / 6)
-    .center([-98, 38])
-    .rotate([100, 0]) // Rotazione per centrare l'America
-    .translate([width / 2, height / 2]);
-
-var path = d3.geoPath().projection(projection);
-
-// Data and color scale
-var data = d3.map();
-var colorScale = d3.scaleThreshold()
-  .domain([100000, 1000000, 10000000, 30000000, 100000000, 500000000])
-  .range(d3.schemeBlues[7]);
-
-// Create groups for the map layers
-var worldGroup = svg.append("g").attr("class", "world");
-var statesGroup = svg.append("g").attr("class", "us-states");
-
-// Load external data and boot
-d3.queue()
-  .defer(d3.json, "../dataset/world-states.geojson.json") // Mappa mondiale
-  .defer(d3.json, "../dataset/us-states.geojson.json") // Mappa degli stati USA
-  .defer(d3.csv, "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world_population.csv", function(d) { data.set(d.code, +d.pop); }) // Dati mondiali
-  .await(ready);
-
-function ready(error, world, usStates) {
-  if (error) throw error;
 
 function zoomToBoundingBox(group, bbox, scaleMultiplier = 1) {
     const [[x0, y0], [x1, y1]] = bbox;
