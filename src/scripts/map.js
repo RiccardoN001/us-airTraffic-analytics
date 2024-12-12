@@ -64,6 +64,8 @@ d3.json("../dataset/world-states.geojson.json")
         console.error("Errore nel caricamento dei dati del mondo:", error)
     );
 
+let selectedStatesArray = new Array();
+
 // Carica i dati GeoJSON per i confini degli stati US
 d3.json("../dataset/us-states.geojson.json")
     .then((data) => {
@@ -76,17 +78,48 @@ d3.json("../dataset/us-states.geojson.json")
             .attr("d", path)
             .attr("fill", "#b3cde0")
             .attr("stroke", "#03396c")
-            .attr("stroke-width", 0.5);
+            .attr("stroke-width", 0.5)
+            .on("mouseover", function(event, d) {
+                let stateMouseOver = d3.select(this);
 
-        // Aggiungi il comportamento di trascinamento
-        svg.call(d3.drag().on("drag", continuousPan));
+                if(!selectedStatesArray.some(state => state.node() === stateMouseOver.node())){
+                    stateMouseOver.raise().attr("fill", "#f08080");
+                }
+            })
+            .on("mouseout", function(event, d) {
+                let stateMouseOut = d3.select(this);
+            
+                if(!selectedStatesArray.some(state => state.node() === stateMouseOut.node())){
+                    stateMouseOut.attr("fill", "#b3cde0"); // ripristina colore originale
+                }
+            })
+            .on("click", function(event, d) {
+                // Seleziona lo stato cliccato
+                const selectedState = d3.select(this);
 
-        // Aggiungi il comportamento di zoom
-        svg.call(d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed));
-    })
-    .catch((error) =>
-        console.error("Errore nel caricamento dei dati degli stati US:", error)
-    );
+                if(selectedStatesArray.some(state => state.node() === selectedState.node())){
+                    // Rimuovi lo stato dall'array
+                    selectedStatesArray = selectedStatesArray.filter(state => state.node() !== selectedState.node());
+
+                    // Ripristina il colore originale
+                    selectedState.attr("fill", "#b3cde0");
+                } 
+                else {
+                    selectedStatesArray.push(selectedState);
+
+                    // Verifica se lo stato è già evidenziato
+                    const currentFill = selectedState.style("fill");
+                    selectedState.attr("fill", "red");
+                }
+            });
+          
+            svg.call(d3.drag().on("drag", continuousPan));
+
+            // Aggiungi il comportamento di zoom
+            svg.call(d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed));
+        })
+        .catch(error => console.error("Errore nel caricamento dei dati degli stati americani:", error));
+        
 
 /*
 // Map and projection (americocentric, without cuts)
