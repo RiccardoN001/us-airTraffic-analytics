@@ -12,7 +12,8 @@ const svg = d3
 let projection = d3
     .geoMercator()
     .scale(width / 6)
-    .translate([width / 2, height / 2]);
+    .translate([width / 2, height / 2 + 120]) // Trasla la mappa al centro del contenitore e leggermente verso l'alto
+    .rotate([100, 0]); // Ruota di 100 gradi longitudine verso est
 
 // Crea un path generator
 const path = d3.geoPath().projection(projection);
@@ -46,7 +47,7 @@ function continuousPan(event) {
     svg.selectAll("path").attr("d", path);
 }
 
-// Carica i dati GeoJSON
+// Carica i dati GeoJSON per la mappa del mondo
 d3.json("../dataset/world-states.geojson.json")
     .then((data) => {
         // Disegna la mappa
@@ -58,14 +59,170 @@ d3.json("../dataset/world-states.geojson.json")
             .attr("fill", "#b3cde0")
             .attr("stroke", "#03396c")
             .attr("stroke-width", 0.5);
-
-        // Aggiungi il comportamento di trascinamento
-        svg.call(d3.drag().on("drag", continuousPan));
-
-        // Aggiungi il comportamento di zoom
-        svg.call(d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed));
     })
-    .catch((error) => console.error("Errore nel caricamento dei dati:", error));
+    .catch((error) =>
+        console.error("Errore nel caricamento dei dati del mondo:", error)
+    );
+
+//dati fittizi per gli stati US
+const fakeData = {
+    "Alabama": Math.random() * 100,
+    "Alaska": Math.random() * 100,
+    "Arizona": Math.random() * 100,
+    "Arkansas": Math.random() * 100,
+    "California": Math.random() * 100,
+    "Colorado": Math.random() * 100,
+    "Connecticut": Math.random() * 100,
+    "Delaware": Math.random() * 100,
+    "Florida": Math.random() * 100,
+    "Georgia": Math.random() * 100,
+    "Hawaii": Math.random() * 100,
+    "Idaho": Math.random() * 100,
+    "Illinois": Math.random() * 100,
+    "Indiana": Math.random() * 100,
+    "Iowa": Math.random() * 100,
+    "Kansas": Math.random() * 100,
+    "Kentucky": Math.random() * 100,
+    "Louisiana": Math.random() * 100,
+    "Maine": Math.random() * 100,
+    "Maryland": Math.random() * 100,
+    "Massachusetts": Math.random() * 100,
+    "Michigan": Math.random() * 100,
+    "Minnesota": Math.random() * 100,
+    "Mississippi": Math.random() * 100,
+    "Missouri": Math.random() * 100,
+    "Montana": Math.random() * 100,
+    "Nebraska": Math.random() * 100,
+    "Nevada": Math.random() * 100,
+    "New Hampshire": Math.random() * 100,
+    "New Jersey": Math.random() * 100,
+    "New Mexico": Math.random() * 100,
+    "New York": Math.random() * 100,
+    "North Carolina": Math.random() * 100,
+    "North Dakota": Math.random() * 100,
+    "Ohio": Math.random() * 100,
+    "Oklahoma": Math.random() * 100,
+    "Oregon": Math.random() * 100,
+    "Pennsylvania": Math.random() * 100,
+    "Rhode Island": Math.random() * 100,
+    "South Carolina": Math.random() * 100,
+    "South Dakota": Math.random() * 100,
+    "Tennessee": Math.random() * 100,
+    "Texas": Math.random() * 100,
+    "Utah": Math.random() * 100,
+    "Vermont": Math.random() * 100,
+    "Virginia": Math.random() * 100,
+    "Washington": Math.random() * 100,
+    "West Virginia": Math.random() * 100,
+    "Wisconsin": Math.random() * 100,
+    "Wyoming": Math.random() * 100
+};
+
+// Scala di colori
+const colorScale = d3.scaleSequential()
+    .domain([0, 100]) // Intervallo dati
+    .interpolator(d3.interpolateBlues);
+
+
+let selectedStatesArray = new Array();
+
+// Carica i dati GeoJSON per i confini degli stati US
+d3.json("../dataset/us-states.geojson.json")
+    .then((data) => {
+        // Disegna i confini degli stati US
+        svg.selectAll(".us-states")
+            .data(data.features)
+            .enter()
+            .append("path")
+            .attr("class", "us-states")
+            .attr("d", path)
+            .attr("fill", (d) => {
+                const stateName = d.properties.NAME; // Nome corretto dallo stato
+                const value = fakeData[stateName]; // Valore associato
+            
+                let fillColor = "white"; // Colore di default
+            
+                if (value !== undefined && value !== null) {
+                    fillColor = colorScale(value); // Applica il colore dalla scala
+                }
+            
+                return fillColor;
+            })            
+            .attr("stroke", "#03396c")
+            .attr("stroke-width", 0.5)
+            .on("mouseover", function(event, d) {
+                let stateMouseOver = d3.select(this);
+
+                if(!selectedStatesArray.some(state => state.node() === stateMouseOver.node()) && selectedStatesArray.length != 0){
+                    stateMouseOver.raise().attr("fill", "#f08080");
+                }
+                else{
+                    stateMouseOver.raise().attr("stroke-width", 1);
+                }
+            })
+            .on("mouseout", function(event, d) {
+                let stateMouseOut = d3.select(this);
+            
+                if(!selectedStatesArray.some(state => state.node() === stateMouseOut.node()) && selectedStatesArray.length != 0){
+                    stateMouseOut.attr("fill", "#b3cde0"); // ripristina colore originale
+                }
+                else{
+                    //ripristina stroke-width di default
+                    stateMouseOut.attr("stroke-width", 0.5);
+                }
+            })
+            .on("click", function(event, d) {
+                // Seleziona lo stato cliccato
+                const selectedState = d3.select(this);
+
+                if(selectedStatesArray.length == 0){
+                    //disattiva chropleth map
+                    svg.selectAll(".us-states").attr("fill", "#b3cde0");
+                }
+
+                if(selectedStatesArray.some(state => state.node() === selectedState.node())){
+                    // Rimuovi lo stato dall'array
+                    selectedStatesArray = selectedStatesArray.filter(state => state.node() !== selectedState.node());
+
+                    // Ripristina il colore originale
+                    selectedState.attr("fill", "#b3cde0");
+
+                    console.log(selectedStatesArray.length);
+
+                    if(selectedStatesArray.lenght == 0){
+                        console.log("nessuno stato selezionato");
+                        //ripristina choropleth map
+                        svg.selectAll(".us-states")
+                            .attr("fill", (d) => {
+                                const stateName = d.properties.NAME; // Nome corretto dallo stato
+                                const value = fakeData[stateName]; // Valore associato
+                            
+                                let fillColor = "white"; // Colore di default
+                            
+                                if (value != undefined && value != null) {
+                                    fillColor = colorScale(value); // Applica il colore dalla scala
+                                }
+                            
+                                return fillColor;
+                            })
+                    }
+                } 
+                else {
+                    selectedStatesArray.push(selectedState);
+
+                    // Verifica se lo stato è già evidenziato
+                    const currentFill = selectedState.style("fill");
+                    selectedState.attr("fill", "red");
+                }
+            });
+          
+            svg.call(d3.drag().on("drag", continuousPan));
+
+            // Aggiungi il comportamento di zoom
+            svg.call(d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed));
+        })
+        .catch(error => console.error("Errore nel caricamento dei dati degli stati americani:", error));
+        
 
 /*
 // Map and projection (americocentric, without cuts)
