@@ -19,7 +19,7 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
   sliderContainer.style.flexDirection = "column";
   sliderContainer.style.alignItems = "center";
   sliderContainer.style.justifyContent = "space-around";
-  sliderContainer.style.backgroundColor = "#f0f0f0"; // Sfondo per evidenziare
+  //sliderContainer.style.backgroundColor = "#f0f0f0"; // Sfondo per evidenziare
 
   // Crea un contenitore per il primo slider e l'etichetta
   const slider1Container = document.createElement("div");
@@ -31,7 +31,7 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
 
   // Etichetta per il primo slider
   const label1 = document.createElement("div");
-  label1.innerText = "Anno";
+  label1.innerText = "";
   label1.style.marginBottom = "20px"; // Distanza dall'etichetta allo slider
   label1.style.fontSize = "12px";
   label1.style.textAlign = "center";
@@ -43,6 +43,7 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
   inputSlider1.min = routes[0].year;
   inputSlider1.max = routes[routes.length - 1].year;
   inputSlider1.value = routes[routes.length - 1].year;
+  inputSlider1.id = "yearSlider"; // Aggiungi l'id
   inputSlider1.style.writingMode = "bt-lr"; // Modalità verticale
   inputSlider1.style.transform = "rotate(270deg)"; // Ruota per verticalità
   inputSlider1.style.width = `${containerHeight / 2 - 20}px`; // Adatta all'altezza del contenitore
@@ -61,7 +62,7 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
 
   // Etichetta per il secondo slider
   const label2 = document.createElement("div");
-  label2.innerText = "Mese";
+  label2.innerText = "";
   label2.style.marginBottom = "20px"; // Distanza dall'etichetta allo slider
   label2.style.fontSize = "12px";
   label2.style.textAlign = "center";
@@ -72,7 +73,8 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
   inputSlider2.type = "range";
   inputSlider2.min = 1;
   inputSlider2.max = 12;
-  inputSlider2.value = 12;
+  inputSlider2.value = 1;
+  inputSlider2.id = "monthSlider"; // Aggiungi l'id
   inputSlider2.style.writingMode = "bt-lr"; // Modalità verticale
   inputSlider2.style.transform = "rotate(270deg)"; // Ruota per verticalità
   inputSlider2.style.width = `${containerHeight / 2 - 20}px`; // Adatta all'altezza del contenitore
@@ -88,15 +90,23 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
   // Aggiungi il contenitore della slidebar accanto alla mappa
   document.body.appendChild(sliderContainer);
 
+  // Imposta il valore iniziale dello slider
+  document.getElementById("yearSlider").value = 2020;
+  document.getElementById("monthSlider").value = 1;
+
+  calculateDegrees();
+
   // Event Listener per la prima slidebar
   inputSlider1.addEventListener("input", (e) => {
-    console.log(`Anno selezionato: ${e.target.value}`);
+    //console.log(`Anno selezionato: ${e.target.value}`);
+    console.log(calculateDegrees());
     // Aggiungi logica per aggiornare la mappa se necessario
   });
 
   // Event Listener per la seconda slidebar
   inputSlider2.addEventListener("input", (e) => {
-    console.log(`Mese selezionato: ${e.target.value}`);
+    //console.log(`Mese selezionato: ${e.target.value}`);
+    console.log(calculateDegrees());
     // Aggiungi logica per aggiornare la mappa se necessario
   });
 

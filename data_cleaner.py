@@ -26,12 +26,12 @@ print('Il dataset passengers ha', len(passengers[passengers.duplicated()]), 'dup
 #Charter e Total sono rimossi perché analizzeremo solo i voli di linea programmati
 #usg_wac e fg_wac sono codici IATA delle zone mondiali, ma le implemento con i codici IATA degli aeroporti
 #airlineid è un dato ridondante con carrier poiché Carrirer è un identificativo univoco per ogni compagnia aerea
-departures = departures.drop(columns=['data_dte', 'usg_apt_id', 'fg_apt_id', 'type', 'carriergroup', 'Total', 'Charter', 'usg_wac', 'fg_wac', 'airlineid'], axis=1)
-passengers = passengers.drop(columns=['data_dte', 'usg_apt_id', 'fg_apt_id', 'type', 'carriergroup', 'Total', 'Charter', 'usg_wac', 'fg_wac', 'airlineid'], axis=1)
+departures = departures.drop(columns=['data_dte', 'usg_apt_id', 'fg_apt_id', 'type', 'carriergroup', 'Scheduled', 'Charter', 'usg_wac', 'fg_wac', 'airlineid'], axis=1)
+passengers = passengers.drop(columns=['data_dte', 'usg_apt_id', 'fg_apt_id', 'type', 'carriergroup', 'Scheduled', 'Charter', 'usg_wac', 'fg_wac', 'airlineid'], axis=1)
 
 # Rinomino le colonne per una migliore comprensione
-departures = departures.rename(columns={'usg_apt_id': 'US_Airport_id','usg_apt': 'US_Airport','fg_apt_id': 'FG_Airport_id', 'fg_apt': 'FG_Airport', 'carrier': 'Airline', 'Scheduled': 'Flights'})
-passengers = passengers.rename(columns={'usg_apt_id': 'US_Airport_id','usg_apt': 'US_Airport','fg_apt_id': 'FG_Airport_id', 'fg_apt': 'FG_Airport', 'carrier': 'Airline', 'Scheduled': 'Passengers'})
+departures = departures.rename(columns={'usg_apt_id': 'US_Airport_id','usg_apt': 'US_Airport','fg_apt_id': 'FG_Airport_id', 'fg_apt': 'FG_Airport', 'carrier': 'Airline', 'Total': 'Flights'})
+passengers = passengers.rename(columns={'usg_apt_id': 'US_Airport_id','usg_apt': 'US_Airport','fg_apt_id': 'FG_Airport_id', 'fg_apt': 'FG_Airport', 'carrier': 'Airline', 'Total': 'Passengers'})
 
 
 # Unisce i due dataset in un unico dataset usando come chiave di join le colonne comuni (se non ci sono corrispondenze, non vengono inserite righe)
