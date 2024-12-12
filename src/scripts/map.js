@@ -189,7 +189,7 @@ d3.json("../dataset/us-states.geojson.json")
 
                     console.log(selectedStatesArray.length);
 
-                    if(selectedStatesArray.lenght == 0){
+                    if(selectedStatesArray.length == 0){
                         console.log("nessuno stato selezionato");
                         //ripristina choropleth map
                         svg.selectAll(".us-states")
