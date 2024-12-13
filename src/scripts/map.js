@@ -27,12 +27,84 @@ const zoom = d3.zoom()
     ])
     .on("zoom", (event) => {
         svg.selectAll("path").attr("transform", event.transform);
+        svg.selectAll("circle").attr("transform", event.transform);  // Trasforma i nodi
     });
+    
+
+// Stati problematici
+//stati eliminati dalla lista: Vietnam, Norway, Philippines, Japan
+const problematicStates = new Set([
+    "The Bahamas", "Fiji", "France", "Haiti",
+    "Indonesia", "Israel", "Malaysia",
+     "Solomon Islands", "Croatia"
+]);
+
+// Funzione per calcolare il bounding box del pezzo più grande
+function getLargestPolygonBounds(feature) {
+    if (feature.geometry.type === "Polygon") {
+        return d3.geoBounds(feature);
+    }
+
+    let largestArea = 0;
+    let largestBounds = [[Infinity, Infinity], [-Infinity, -Infinity]];
+
+    if (feature.geometry.type === "MultiPolygon") {
+        feature.geometry.coordinates.forEach(polygon => {
+            const projectedPolygon = {
+                type: "Polygon",
+                coordinates: polygon
+            };
+            const bounds = d3.geoBounds(projectedPolygon);
+            const area = d3.geoArea(projectedPolygon);
+
+            if (area > largestArea) {
+                largestArea = area;
+                largestBounds = bounds;
+            }
+        });
+    }
+
+    return largestBounds;
+}
+
+// Funzione per calcolare un punto interno personalizzato
+function getCustomPoint(feature) {
+    const bounds = getLargestPolygonBounds(feature);
+    return [
+        (bounds[0][0] + bounds[1][0]) / 2,  // Media tra min e max long
+        (bounds[0][1] + bounds[1][1]) / 2   // Media tra min e max lat
+    ];
+}
+
+// Funzione aggiornata per calcolare centroidi validi
+function getValidCentroid(feature) {
+    let centroid = d3.geoCentroid(feature);
+
+    // Controlla se il centroide è dentro lo stato
+    if (d3.geoContains(feature, centroid)) {
+        return centroid;
+    }
+
+    // Controlla se lo stato è problematico
+    if (problematicStates.has(feature.properties.name)) {
+        console.warn(`Centroide fuori stato per ${feature.properties.name}, uso punto personalizzato...`);
+        return getCustomPoint(feature);
+    }
+
+    // Centroide non trovato
+    console.warn(`Centroide fuori stato per ${feature.properties.name}`, centroid);
+    return centroid;
+}
 
 /////////////////////////////////////////////CHOROPLETH MAP//////////////////////////////////////////////////////////////
 // Carica i dati GeoJSON per la mappa del mondo
+
+let worldData = null;
+let usaData = null;
+
 d3.json("../dataset/world-states.geojson.json")
     .then((data) => {
+        worldData = data;
         // Disegna la mappa
         svg.selectAll("path")
             .data(data.features)
@@ -42,6 +114,15 @@ d3.json("../dataset/world-states.geojson.json")
             .attr("fill", "#b3cde0")
             .attr("stroke", "#03396c")
             .attr("stroke-width", 0.5);
+
+        svg.selectAll("circle")
+            .data(data.features)
+            .enter().append("circle")
+            .attr("cx", d => projection(getValidCentroid(d))[0])
+            .attr("cy", d => projection(getValidCentroid(d))[1])
+            .attr("r", 1)
+            .attr("fill", "red")
+            .attr("fill", d => problematicStates.has(d.properties.name) ? "blue" : "red");
     })
     .catch((error) =>
         console.error("Errore nel caricamento dei dati del mondo:", error)
@@ -106,6 +187,7 @@ let selectedStatesArray = new Array();
 // Carica i dati GeoJSON per i confini degli stati US
 d3.json("../dataset/us-states.geojson.json")
     .then((data) => {
+        usaData = data;
         // Disegna i confini degli stati US
         svg.selectAll(".us-states")
             .data(data.features)
@@ -132,9 +214,11 @@ d3.json("../dataset/us-states.geojson.json")
 
                 if(!selectedStatesArray.some(state => state.node() === stateMouseOver.node()) && selectedStatesArray.length != 0){
                     stateMouseOver.raise().attr("fill", "#f08080");
+                    reRaiseArcs();
                 }
                 else{
                     stateMouseOver.raise().attr("stroke-width", 1);
+                    reRaiseArcs();
                 }
             })
             .on("mouseout", function(event, d) {
@@ -185,6 +269,29 @@ d3.json("../dataset/us-states.geojson.json")
             });
           
             svg.call(zoom);
+
+            svg.selectAll(".us-nodes")
+                .data(data.features)
+                .enter()
+                .append("circle")
+                .attr("class", "us-nodes")
+                .attr("cx", d => projection(getValidCentroid(d))[0])
+                .attr("cy", d => projection(getValidCentroid(d))[1])
+                .attr("r", 1)  // Valore del raggio aumentato per visibilità
+                .attr("fill", d => problematicStates.has(d.properties.name) ? "blue" : "red");
+
+            const california = usaData.features.find(d => d.properties.NAME === "California");
+            const italy = worldData.features.find(d => d.properties.name === "Italy");
+            const france = worldData.features.find(d => d.properties.name === "France");
+            const brazil = worldData.features.find(d => d.properties.name === "Brazil");
+            const Japan = worldData.features.find(d => d.properties.name === "Japan");
+            const philippines = worldData.features.find(d => d.properties.name === "Philippines");
+            
+            drawArc(california, italy, "green");
+            drawArc(california, france, "blue");
+            drawArc(california, brazil, "red");
+            drawArc(california, Japan, "yellow");
+            drawArc(california, philippines, "purple");
         })
         .catch(error => console.error("Errore nel caricamento dei dati degli stati americani:", error));
 
@@ -211,4 +318,34 @@ function zoomToAmerica() {
                 .translate(translateX, translateY) // Traslazione
                 .scale(newScale) // Scala
         );
+}
+
+
+function drawArc(source, target, color = "black") {
+    // Controlla se gli stati sono nel dataset corretto
+    const sourceCoords = source.properties.NAME 
+        ? projection(getValidCentroid(source)) // Se è uno stato US
+        : projection(getValidCentroid(source));
+
+    const targetCoords = target.properties.name 
+        ? projection(getValidCentroid(target)) // Se è uno stato estero
+        : projection(getValidCentroid(target));
+
+    svg.append("path")
+        .datum({
+            type: "LineString",
+            coordinates: [
+                getValidCentroid(source), 
+                getValidCentroid(target)
+            ]
+        })
+        .attr("d", d3.geoPath().projection(projection))
+        .attr("fill", "none")
+        .attr("stroke", color)
+        .attr("stroke-width", 2)
+        .attr("class", "arc");
+}
+
+function reRaiseArcs() {
+    svg.selectAll(".arc").raise();
 }
