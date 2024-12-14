@@ -118,12 +118,16 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
       console.log(`Anno selezionato: ${e.target.value}`);
       calculateDegrees();
       updateSliderLabels();
+      svg.selectAll(".arc").remove();
+
     });
 
     document.getElementById("monthSlider").addEventListener("input", (e) => {
       console.log(`Mese selezionato: ${e.target.value}`);
       calculateDegrees();
       updateSliderLabels();
+      svg.selectAll(".arc").remove();
+
     });
   };
 
