@@ -293,40 +293,34 @@ d3.json("../dataset/us-states.geojson.json")
         })
         .catch(error => console.error("Errore nel caricamento dei dati degli stati americani:", error));
 
-//funzione usata solo per ottenere manualmente i bounds correnti dello zoom, non "serve" nel progetto
-function getCurrentZoomBounds() {
-    // Ottieni la trasformazione corrente
-    const transform = d3.zoomTransform(svg.node());
-
-    // Calcola i bounds attuali
-    const x0 = -transform.x / transform.k;
-    const y0 = -transform.y / transform.k;
-    const x1 = x0 + width / transform.k;
-    const y1 = y0 + height / transform.k;
-
-    return [[x0, y0], [x1, y1]];
-}
-
-svg.on("click", () => {
-    const bounds = getCurrentZoomBounds();
-    console.log("Zoom Bounds:", bounds);
-});
-
 function zoomToAmerica() {
-    const usBounds = [
-        [407.4741102444342, 155.6591342086483],  // Sud-Ovest 
-        [941.8491102444339, 429.09663420864814]   // Nord-Est 
-    ];
+ 
+    // Escludi Alaska e Hawaii
+    const mainlandUSFeatures = usaData.features.filter(
+        d => !["Alaska", "Hawaii"].includes(d.properties.NAME)
+    );
+
+    // Calcola i limiti geografici
+    const pathGenerator = d3.geoPath().projection(projection);
+    const usBounds = pathGenerator.bounds({
+        type: "FeatureCollection",
+        features: mainlandUSFeatures
+    });
 
     const [[x0, y0], [x1, y1]] = usBounds;
+    const offsetX = 100;  
+    const offsetY = 75;  
 
     // Calcola centro e scala
     const dx = x1 - x0;
     const dy = y1 - y0;
-    const scale = Math.min(width / dx, height / dy)
-    const translate = [width / 2 - scale * (x0 + x1) / 2, height / 2 - scale * (y0 + y1) / 2];
+    const scale = Math.min(width / dx, height / dy) * 0.55;  // Scala ridotta
+    const translate = [
+        width / 2 - scale * (x0 + x1) / 2 + offsetX,
+        height / 2 - scale * (y0 + y1) / 2 + offsetY
+    ];
 
-    // Applica lo zoom senza bloccare il pan
+    // Applica lo zoom
     svg.transition()
         .duration(1000)
         .call(
