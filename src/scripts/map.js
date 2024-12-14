@@ -10,8 +10,7 @@ const svg = d3
     .style("border", "1px solid black");
 
 // Definisci la proiezione centrata sull'America
-let projection = d3
-    .geoMercator()
+let projection = d3.geoMercator()
     .scale(width / 6)
     .translate([width / 2, height / 2 + 120]) // Trasla la mappa al centro del contenitore e leggermente verso l'alto
     .rotate([100, 0]); // Ruota di 100 gradi longitudine verso est
@@ -188,6 +187,8 @@ let selectedStatesArray = new Array();
 d3.json("../dataset/us-states.geojson.json")
     .then((data) => {
         usaData = data;
+        svg.call(zoom);
+        zoomToAmerica();
         // Disegna i confini degli stati US
         svg.selectAll(".us-states")
             .data(data.features)
@@ -239,7 +240,7 @@ d3.json("../dataset/us-states.geojson.json")
                 if(selectedStatesArray.length == 0){
                     //disattiva chropleth map
                     svg.selectAll(".us-states").attr("fill", "#b3cde0");
-                    //zoom out world
+                    zoomOutWorld();
                 }
 
                 if(selectedStatesArray.some(state => state.node() === selectedState.node())){
@@ -256,7 +257,7 @@ d3.json("../dataset/us-states.geojson.json")
                     if(selectedStatesArray.length == 0){
                         console.log("nessuno stato selezionato");
                         calculateDegrees();
-                        //zoom in USA
+                        zoomToAmerica();
                     }
                 } 
                 else {
@@ -266,8 +267,6 @@ d3.json("../dataset/us-states.geojson.json")
                 }
             });
           
-            svg.call(zoom);
-
             svg.selectAll(".us-nodes")
                 .data(data.features)
                 .enter()
@@ -294,31 +293,73 @@ d3.json("../dataset/us-states.geojson.json")
         })
         .catch(error => console.error("Errore nel caricamento dei dati degli stati americani:", error));
 
+//funzione usata solo per ottenere manualmente i bounds correnti dello zoom, non "serve" nel progetto
+function getCurrentZoomBounds() {
+    // Ottieni la trasformazione corrente
+    const transform = d3.zoomTransform(svg.node());
+
+    // Calcola i bounds attuali
+    const x0 = -transform.x / transform.k;
+    const y0 = -transform.y / transform.k;
+    const x1 = x0 + width / transform.k;
+    const y1 = y0 + height / transform.k;
+
+    return [[x0, y0], [x1, y1]];
+}
+
+svg.on("click", () => {
+    const bounds = getCurrentZoomBounds();
+    console.log("Zoom Bounds:", bounds);
+});
 
 function zoomToAmerica() {
-    // Bounding box approssimativo dell'America
-    const americaBounds = [[-170, 10], [-50, 75]]; // [Sud-Ovest, Nord-Est]
-    const center = [
-        (americaBounds[0][0] + americaBounds[1][0]) / 2, // Longitudine media
-        (americaBounds[0][1] + americaBounds[1][1]) / 2  // Latitudine media
+    const usBounds = [
+        [407.4741102444342, 155.6591342086483],  // Sud-Ovest 
+        [941.8491102444339, 429.09663420864814]   // Nord-Est 
     ];
 
-    // Calcola la scala e traslazione per centrare l'America
-    const newScale = width / 2; // Scala per zoom sull'America
-    const translateX = width / 2; // Centra orizzontalmente
-    const translateY = height / 2; // Centra verticalmente
+    const [[x0, y0], [x1, y1]] = usBounds;
 
-    // Usa la trasformazione di zoom per impostare il nuovo stato
+    // Calcola centro e scala
+    const dx = x1 - x0;
+    const dy = y1 - y0;
+    const scale = Math.min(width / dx, height / dy)
+    const translate = [width / 2 - scale * (x0 + x1) / 2, height / 2 - scale * (y0 + y1) / 2];
+
+    // Applica lo zoom senza bloccare il pan
     svg.transition()
-        .duration(1000) // Durata della transizione
+        .duration(1000)
         .call(
-            zoomBehavior.transform, // Applica la trasformazione
+            zoom.transform,
             d3.zoomIdentity
-                .translate(translateX, translateY) // Traslazione
-                .scale(newScale) // Scala
+                .translate(translate[0], translate[1])
+                .scale(scale)
         );
 }
 
+function zoomOutWorld() {
+    // Definisci i bounds per la vista globale
+    const x0 = 0;
+    const y0 = 0;
+    const x1 = width;
+    const y1 = height;
+
+    // Calcola scala e traslazione per lo zoom out
+    const dx = x1 - x0;
+    const dy = y1 - y0;
+    const scale = Math.min(width / dx, height / dy);
+    const translate = [width / 2 - scale * (x0 + x1) / 2, height / 2 - scale * (y0 + y1) / 2];
+
+    // Applica la trasformazione per lo zoom out
+    svg.transition()
+        .duration(1000)
+        .call(
+            zoom.transform,
+            d3.zoomIdentity
+                .translate(translate[0], translate[1])
+                .scale(scale)
+        );
+}
 
 function drawArc(source, target, color = "black") {
     // Controlla se gli stati sono nel dataset corretto
