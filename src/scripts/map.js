@@ -38,63 +38,7 @@ const problematicStates = new Set([
      "Solomon Islands", "Croatia"
 ]);
 
-// Funzione per calcolare il bounding box del pezzo più grande
-function getLargestPolygonBounds(feature) {
-    if (feature.geometry.type === "Polygon") {
-        return d3.geoBounds(feature);
-    }
-
-    let largestArea = 0;
-    let largestBounds = [[Infinity, Infinity], [-Infinity, -Infinity]];
-
-    if (feature.geometry.type === "MultiPolygon") {
-        feature.geometry.coordinates.forEach(polygon => {
-            const projectedPolygon = {
-                type: "Polygon",
-                coordinates: polygon
-            };
-            const bounds = d3.geoBounds(projectedPolygon);
-            const area = d3.geoArea(projectedPolygon);
-
-            if (area > largestArea) {
-                largestArea = area;
-                largestBounds = bounds;
-            }
-        });
-    }
-
-    return largestBounds;
-}
-
-// Funzione per calcolare un punto interno personalizzato
-function getCustomPoint(feature) {
-    const bounds = getLargestPolygonBounds(feature);
-    return [
-        (bounds[0][0] + bounds[1][0]) / 2,  // Media tra min e max long
-        (bounds[0][1] + bounds[1][1]) / 2   // Media tra min e max lat
-    ];
-}
-
-// Funzione aggiornata per calcolare centroidi validi
-function getValidCentroid(feature) {
-    let centroid = d3.geoCentroid(feature);
-
-    // Controlla se il centroide è dentro lo stato
-    if (d3.geoContains(feature, centroid)) {
-        return centroid;
-    }
-
-    // Controlla se lo stato è problematico
-    if (problematicStates.has(feature.properties.name)) {
-        console.warn(`Centroide fuori stato per ${feature.properties.name}, uso punto personalizzato...`);
-        return getCustomPoint(feature);
-    }
-
-    // Centroide non trovato
-    console.warn(`Centroide fuori stato per ${feature.properties.name}`, centroid);
-    return centroid;
-}
-
+const tooltip = createTooltip();
 /////////////////////////////////////////////CHOROPLETH MAP//////////////////////////////////////////////////////////////
 // Carica i dati GeoJSON per la mappa del mondo
 
@@ -112,7 +56,22 @@ d3.json("../dataset/world-states.geojson.json")
             .attr("d", path)
             .attr("fill", "#b3cde0")
             .attr("stroke", "#03396c")
-            .attr("stroke-width", 0.5);
+            .attr("stroke-width", 0.5)
+            .on("mouseover", function(event, d) {
+                let stateMouseOver = d3.select(this);
+
+                const stateName = d.properties.name; // Nome dello stato
+                showTooltip(tooltip, event, `<strong>${stateName}</strong>`);  
+            })
+            .on("mousemove", function(event) {
+                // Mantieni il tooltip aggiornato con la posizione del mouse
+                tooltip.style("left", `${event.pageX + 10}px`)
+                       .style("top", `${event.pageY + 10}px`);
+            })
+            .on("mouseout", function(event, d) {
+                let stateMouseOut = d3.select(this);
+                hideTooltip(tooltip);
+            });
 
         svg.selectAll("circle")
             .data(data.features)
@@ -133,8 +92,9 @@ var routes = new Array();
 d3.json("../../dataset/International_Report.json").then(function(jsonData) {
      states = jsonData.nodes;
      routes = jsonData.edges;
-     //calculateDegrees(); // Call calculateDegrees after data is loaded
+     calculateDegrees();
 });
+
 
 let selectedTimeDegrees = {};
 //Creazione dizionario con i gradi di collegamenti
@@ -154,7 +114,7 @@ function calculateDegrees() {
         return acc;
     }, {}); 
 
-    const selectedTimeDegrees = Object.fromEntries(
+    selectedTimeDegrees = Object.fromEntries(
         Object.entries(degree).map(([state, degree]) => [state, degree.size])
     );
 
@@ -182,7 +142,6 @@ function calculateDegrees() {
 
 
 let selectedStatesArray = new Array();
-
 // Carica i dati GeoJSON per i confini degli stati US
 d3.json("../dataset/us-states.geojson.json")
     .then((data) => {
@@ -213,6 +172,10 @@ d3.json("../dataset/us-states.geojson.json")
             .on("mouseover", function(event, d) {
                 let stateMouseOver = d3.select(this);
 
+                const stateName = d.properties.NAME; // Nome dello stato
+                let degree = selectedTimeDegrees[stateName] == undefined ? 0 : selectedTimeDegrees[stateName];
+                showTooltip(tooltip, event, `<strong>${stateName}</strong><br>Degree: ${degree}`);
+
                 if(!selectedStatesArray.some(state => state.node() === stateMouseOver.node()) && selectedStatesArray.length != 0){
                     stateMouseOver.raise().attr("fill", "#f08080");
                     reRaiseArcs();
@@ -222,8 +185,14 @@ d3.json("../dataset/us-states.geojson.json")
                     reRaiseArcs();
                 }
             })
+            .on("mousemove", function(event) {
+                // Mantieni il tooltip aggiornato con la posizione del mouse
+                tooltip.style("left", `${event.pageX + 10}px`)
+                       .style("top", `${event.pageY + 10}px`);
+            })
             .on("mouseout", function(event, d) {
                 let stateMouseOut = d3.select(this);
+                hideTooltip(tooltip);
             
                 if(!selectedStatesArray.some(state => state.node() === stateMouseOut.node()) && selectedStatesArray.length != 0){
                     stateMouseOut.attr("fill", "#b3cde0"); // ripristina colore originale
@@ -276,163 +245,8 @@ d3.json("../dataset/us-states.geojson.json")
                 .attr("cy", d => projection(getValidCentroid(d))[1])
                 .attr("r", 1)  // Valore del raggio aumentato per visibilità
                 .attr("fill", d => problematicStates.has(d.properties.name) ? "blue" : "red");
-
-            /*const california = usaData.features.find(d => d.properties.NAME === "California");
-            const italy = worldData.features.find(d => d.properties.name === "Italy");
-            const france = worldData.features.find(d => d.properties.name === "France");
-            const brazil = worldData.features.find(d => d.properties.name === "Brazil");
-            const Japan = worldData.features.find(d => d.properties.name === "Japan");
-            const philippines = worldData.features.find(d => d.properties.name === "Philippines");
-
-            drawArc(california, italy);
-            drawArc(california, france);
-            drawArc(california, brazil);
-            drawArc(california, Japan);
-            drawArc(california, philippines);*/
-            
+ 
         })
         .catch(error => console.error("Errore nel caricamento dei dati degli stati americani:", error));
 
-function zoomToAmerica() {
- 
-    // Escludi Alaska e Hawaii
-    const mainlandUSFeatures = usaData.features.filter(
-        d => !["Alaska", "Hawaii"].includes(d.properties.NAME)
-    );
-
-    // Calcola i limiti geografici
-    const pathGenerator = d3.geoPath().projection(projection);
-    const usBounds = pathGenerator.bounds({
-        type: "FeatureCollection",
-        features: mainlandUSFeatures
-    });
-
-    const [[x0, y0], [x1, y1]] = usBounds;
-    const offsetX = 100;  
-    const offsetY = 75;  
-
-    // Calcola centro e scala
-    const dx = x1 - x0;
-    const dy = y1 - y0;
-    const scale = Math.min(width / dx, height / dy) * 0.55;  // Scala ridotta
-    const translate = [
-        width / 2 - scale * (x0 + x1) / 2 + offsetX,
-        height / 2 - scale * (y0 + y1) / 2 + offsetY
-    ];
-
-    // Applica lo zoom
-    svg.transition()
-        .duration(1000)
-        .call(
-            zoom.transform,
-            d3.zoomIdentity
-                .translate(translate[0], translate[1])
-                .scale(scale)
-        );
-}
-
-function zoomOutWorld() {
-    // Definisci i bounds per la vista globale
-    const x0 = 0;
-    const y0 = 0;
-    const x1 = width;
-    const y1 = height;
-
-    // Calcola scala e traslazione per lo zoom out
-    const dx = x1 - x0;
-    const dy = y1 - y0;
-    const scale = Math.min(width / dx, height / dy);
-    const translate = [width / 2 - scale * (x0 + x1) / 2, height / 2 - scale * (y0 + y1) / 2];
-
-    // Applica la trasformazione per lo zoom out
-    svg.transition()
-        .duration(1000)
-        .call(
-            zoom.transform,
-            d3.zoomIdentity
-                .translate(translate[0], translate[1])
-                .scale(scale)
-        );
-}
-
-function drawArc(source, target, color = "black") {
-    // Controlla se gli stati sono nel dataset corretto
-    const sourceCoords = source.properties.NAME 
-        ? projection(getValidCentroid(source)) // Se è uno stato US
-        : projection(getValidCentroid(source));
-
-    const targetCoords = target.properties.name 
-        ? projection(getValidCentroid(target)) // Se è uno stato estero
-        : projection(getValidCentroid(target));
-
-    svg.append("path")
-        .datum({
-            type: "LineString",
-            coordinates: [
-                getValidCentroid(source), 
-                getValidCentroid(target)
-            ]
-        })
-        .attr("d", d3.geoPath().projection(projection))
-        .attr("fill", "none")
-        .attr("stroke", color)
-        .attr("stroke-width", 2)
-        .attr("class", "arc");
-}
-
-function reRaiseArcs() {
-    svg.selectAll(".arc").raise();
-}
-
-function drawConnections(selectedState, selectedStatesArray, usaData, worldData, routes) {
-    // Aggiungi lo stato selezionato all'array
-    selectedStatesArray.push(selectedState);
-  
-    // Evidenzia lo stato selezionato
-    selectedState.attr("fill", "red");
-  
-    // Recupera anno e mese selezionati
-    const selectedYear = document.getElementById("yearSlider").value;
-    const selectedMonth = document.getElementById("monthSlider").value;
-  
-    // Trova la sorgente nello stato selezionato
-    const source = usaData.features.find(
-      (d) => d.properties.NAME === selectedState.data()[0].properties.NAME
-    );
-  
-    if (!source) {
-      console.error("Source state not found in usaData.");
-      return;
-    }
-  
-    // Filtra le rotte per anno, mese e stato sorgente
-    const degree = routes.filter(
-      (route) =>
-        route.year == selectedYear &&
-        route.month == selectedMonth &&
-        route.US_state === source.properties.NAME
-    );
-  
-    // Per ogni rotta, trova il target e disegna l'arco
-    degree.forEach((route) => {
-      const target = worldData.features.find(
-        (d) => d.properties.name === route.FG_state
-      );
-  
-      if (!target) {
-        console.warn(`Target state ${route.FG_state} not found in worldData.`);
-        return;
-      }
-  
-      console.log(
-        "Target:",
-        target.properties.name,
-        "Source:",
-        source.properties.NAME
-      );
-  
-      // Disegna l'arco
-      drawArc(source, target, "black");
-    });
-  }
   
