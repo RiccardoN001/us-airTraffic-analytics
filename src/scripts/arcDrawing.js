@@ -1,3 +1,40 @@
+let availableColors = [
+    "#6B8E23", // Olive Green
+    "#4682B4", // Steel Blue
+    "#D2B48C", // Tan
+    "#708090", // Slate Gray
+    "#8FBC8F", // Dark Sea Green
+    "#B0C4DE", // Light Steel Blue
+    "#A0522D", // Sienna
+    "#C0C0C0"  // Silver
+  ];
+  
+let usedColors = [];
+  
+function assignColor() {
+    if (availableColors.length > 0) {
+        const color = availableColors.pop(); // Prendi un colore disponibile
+        usedColors.push(color); // Sposta il colore nella lista dei colori usati
+        return color;
+}
+
+// Fallback: se i colori sono esauriti, ritorna un colore di default
+console.warn("No more colors available!");
+return "#000000"; // Nero come fallback
+}
+  
+
+function releaseColor(color) {
+    const index = usedColors.indexOf(color);
+    if (index > -1) {
+        usedColors.splice(index, 1); // Rimuovi il colore dai colori usati
+        availableColors.push(color); // Aggiungilo ai colori disponibili
+    }
+}
+  
+  
+
+
 // Funzione per calcolare il bounding box del pezzo più grande
 function getLargestPolygonBounds(feature) {
     if (feature.geometry.type === "Polygon") {
@@ -78,7 +115,7 @@ function drawArc(source, target, color = "black") {
         .attr("fill", "none")
         .attr("stroke", color)
         .attr("stroke-width", 2)
-        .attr("class", "arc");
+        .attr("class", `arc-${source.properties.NAME.replace(/\s+/g, '-')}`);
 }
 
 
@@ -102,6 +139,8 @@ function drawConnections(selectedState, selectedStatesArray, usaData, worldData,
       console.error("Source state not found in usaData.");
       return;
     }
+
+    const arcColor = assignColor();
   
     // Filtra le rotte per anno, mese e stato sorgente
     const degree = routes.filter(
@@ -110,30 +149,44 @@ function drawConnections(selectedState, selectedStatesArray, usaData, worldData,
         route.month == selectedMonth &&
         route.US_state === source.properties.NAME
     );
-  
-    // Per ogni rotta, trova il target e disegna l'arco
+
+    // Calcola il minimo e il massimo dei passeggeri
+    const minPassengers = d3.min(degree, d => d.passengers);
+    const maxPassengers = d3.max(degree, d => d.passengers);
+
+    // Definisci una scala di colori
+    const colorScale = d3.scaleLinear()
+    .domain([minPassengers, maxPassengers]) // Range di valori di passeggeri
+    .range(["#c6f5ca", "#1b5e20"]); // Verde chiaro -> Verde scuro
+
+
     degree.forEach((route) => {
-      const target = worldData.features.find(
-        (d) => d.properties.name === route.FG_state
-      );
-  
-      if (!target) {
-        console.warn(`Target state ${route.FG_state} not found in worldData.`);
-        return;
-      }
-  
-      console.log(
-        "Target:",
-        target.properties.name,
-        "Source:",
-        source.properties.NAME
-      );
-  
-      // Disegna l'arco
-      drawArc(source, target, "black");
+        const target = worldData.features.find(
+          (d) => d.properties.name === route.FG_state
+        );
+      
+        if (!target) {
+          console.warn(`Target state ${route.FG_state} not found in worldData.`);
+          return;
+        }
+      
+        console.log(
+          "Target:",
+          target.properties.name,
+          "Source:",
+          source.properties.NAME,
+          "Passengers:",
+          route.passengers
+        );
+      
+        // Calcola il colore in base al numero di passeggeri
+        const arcColor = colorScale(route.passengers);
+      
+        // Disegna l'arco
+        drawArc(source, target, arcColor);
     });
   }
 
 function reRaiseArcs() {
-    svg.selectAll(".arc").raise();
+    svg.selectAll("[class^='arc-']").raise();
 }

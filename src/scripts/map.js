@@ -156,84 +156,88 @@ d3.json("../dataset/us-states.geojson.json")
             .attr("class", "us-states")
             .attr("d", path)
             .attr("fill", (d) => {
-                const stateName = d.properties.NAME; // Nome corretto dallo stato
-                const value = selectedTimeDegrees[stateName]; // Valore associato
+            const stateName = d.properties.NAME; // Nome corretto dallo stato
+            const value = selectedTimeDegrees[stateName]; // Valore associato
             
-                let fillColor = "white"; // Colore di default
+            let fillColor = "white"; // Colore di default
             
-                if (value !== undefined && value !== null) {
-                    fillColor = colorScale(value); // Applica il colore dalla scala
-                }
+            if (value !== undefined && value !== null) {
+                fillColor = colorScale(value); // Applica il colore dalla scala
+            }
             
-                return fillColor;
+            return fillColor;
             })            
             .attr("stroke", "#03396c")
             .attr("stroke-width", 0.5)
             .on("mouseover", function(event, d) {
-                let stateMouseOver = d3.select(this);
+            let stateMouseOver = d3.select(this);
 
-                const stateName = d.properties.NAME; // Nome dello stato
-                let degree = selectedTimeDegrees[stateName] == undefined ? 0 : selectedTimeDegrees[stateName];
-                showTooltip(tooltip, event, `<strong>${stateName}</strong><br>Degree: ${degree}`);
+            const stateName = d.properties.NAME; // Nome dello stato
+            let degree = selectedTimeDegrees[stateName] == undefined ? 0 : selectedTimeDegrees[stateName];
+            showTooltip(tooltip, event, `<strong>${stateName}</strong><br>Degree: ${degree}`);
 
-                if(!selectedStatesArray.some(state => state.node() === stateMouseOver.node()) && selectedStatesArray.length != 0){
-                    stateMouseOver.raise().attr("fill", "#f08080");
-                    reRaiseArcs();
-                }
-                else{
-                    stateMouseOver.raise().attr("stroke-width", 1);
-                    reRaiseArcs();
-                }
+            if(!selectedStatesArray.some(state => state.node() === stateMouseOver.node()) && selectedStatesArray.length != 0){
+                stateMouseOver.raise().attr("fill", "#f08080");
+                reRaiseArcs();
+            }
+            else{
+                stateMouseOver.raise().attr("stroke-width", 1);
+                reRaiseArcs();
+            }
             })
             .on("mousemove", function(event) {
-                // Mantieni il tooltip aggiornato con la posizione del mouse
-                tooltip.style("left", `${event.pageX + 10}px`)
-                       .style("top", `${event.pageY + 10}px`);
+            // Mantieni il tooltip aggiornato con la posizione del mouse
+            tooltip.style("left", `${event.pageX + 10}px`)
+                   .style("top", `${event.pageY + 10}px`);
             })
             .on("mouseout", function(event, d) {
-                let stateMouseOut = d3.select(this);
-                hideTooltip(tooltip);
+            let stateMouseOut = d3.select(this);
+            hideTooltip(tooltip);
             
-                if(!selectedStatesArray.some(state => state.node() === stateMouseOut.node()) && selectedStatesArray.length != 0){
-                    stateMouseOut.attr("fill", "#b3cde0"); // ripristina colore originale
-                }
-                else{
-                    //ripristina stroke-width di default
-                    stateMouseOut.attr("stroke-width", 0.5);
-                }
+            if(!selectedStatesArray.some(state => state.node() === stateMouseOut.node()) && selectedStatesArray.length != 0){
+                stateMouseOut.attr("fill", "#b3cde0"); // ripristina colore originale
+            }
+            else{
+                //ripristina stroke-width di default
+                stateMouseOut.attr("stroke-width", 0.5);
+            }
             })
             .on("click", function(event, d) {
-                // Seleziona lo stato cliccato
-                const selectedState = d3.select(this);
+            // Seleziona lo stato cliccato
+            const selectedState = d3.select(this);
+
+            if(selectedStatesArray.length == 0){
+                //disattiva chropleth map
+                svg.selectAll(".us-states").attr("fill", "#b3cde0");
+                zoomOutWorld();
+            }
+
+            if(selectedStatesArray.some(state => state.node() === selectedState.node())){
+                // Rimuovi lo stato dall'array
+                selectedStatesArray = selectedStatesArray.filter(state => state.node() !== selectedState.node());
+
+                // Ripristina il colore originale
+                selectedState.attr("fill", "#b3cde0");
+                selectedState.attr("stroke-width", 0.5);
+
+                // Rimuovi gli archi associati allo stato e ripristina i colori
+                svg.selectAll(`.arc-${d.properties.NAME.replace(/\s+/g, '-')}`)
+                    .each(function() {
+                        const color = d3.select(this).attr("stroke");
+                        releaseColor(color);
+                    })
+                    .remove();
 
                 if(selectedStatesArray.length == 0){
-                    //disattiva chropleth map
-                    svg.selectAll(".us-states").attr("fill", "#b3cde0");
-                    zoomOutWorld();
+                console.log("nessuno stato selezionato");
+                calculateDegrees();
+                zoomToAmerica();
                 }
-
-                if(selectedStatesArray.some(state => state.node() === selectedState.node())){
-                    // Rimuovi lo stato dall'array
-                    selectedStatesArray = selectedStatesArray.filter(state => state.node() !== selectedState.node());
-
-                    // Ripristina il colore originale
-                    selectedState.attr("fill", "#b3cde0");
-                    selectedState.attr("stroke-width", 0.5);
-                    
-
-                    console.log(selectedStatesArray.length);
-
-                    if(selectedStatesArray.length == 0){
-                        console.log("nessuno stato selezionato");
-                        calculateDegrees();
-                        zoomToAmerica();
-                    }
-                } 
-                else {
-                    selectedStatesArray.push(selectedState);
-                    drawConnections(selectedState, selectedStatesArray, usaData, worldData, routes);   
-
-                }
+            } 
+            else {
+                selectedStatesArray.push(selectedState);
+                drawConnections(selectedState, selectedStatesArray, usaData, worldData, routes);   
+            }
             });
           
             svg.selectAll(".us-nodes")
