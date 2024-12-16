@@ -83,12 +83,12 @@ function getValidCentroid(feature) {
 
     // Controlla se lo stato è problematico
     if (problematicStates.has(feature.properties.name)) {
-        console.warn(`Centroide fuori stato per ${feature.properties.name}, uso punto personalizzato...`);
+        //console.warn(`Centroide fuori stato per ${feature.properties.name}, uso punto personalizzato...`);
         return getCustomPoint(feature);
     }
 
     // Centroide non trovato
-    console.warn(`Centroide fuori stato per ${feature.properties.name}`, centroid);
+    //console.warn(`Centroide fuori stato per ${feature.properties.name}`, centroid);
     return centroid;
 }
 

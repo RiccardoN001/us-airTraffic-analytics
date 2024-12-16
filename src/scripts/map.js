@@ -88,8 +88,8 @@ d3.json("../dataset/world-states.geojson.json")
             .attr("cx", d => projection(getValidCentroid(d))[0])
             .attr("cy", d => projection(getValidCentroid(d))[1])
             .attr("r", 0)       //porre uguale a 1 per debug
-            .attr("fill", "red")
-            .attr("fill", d => problematicStates.has(d.properties.name) ? "blue" : "red");
+            .attr("fill", "red");
+            //.attr("fill", d => problematicStates.has(d.properties.name) ? "blue" : "red");
     })
     .catch((error) =>
         console.error("Errore nel caricamento dei dati del mondo:", error)
@@ -238,7 +238,7 @@ d3.json("../dataset/us-states.geojson.json")
                     .remove();
 
                 if(selectedStatesArray.length == 0){
-                console.log("nessuno stato selezionato");
+                //console.log("nessuno stato selezionato");
                 calculateDegrees();
                 zoomToAmerica();
                 }
@@ -256,8 +256,8 @@ d3.json("../dataset/us-states.geojson.json")
                 .attr("class", "us-nodes")
                 .attr("cx", d => projection(getValidCentroid(d))[0])
                 .attr("cy", d => projection(getValidCentroid(d))[1])
-                .attr("r", 0)    //porre uguale a 1 per debug
-                .attr("fill", d => problematicStates.has(d.properties.name) ? "blue" : "red");
+                .attr("r", 0);    //porre uguale a 1 per debug
+                //.attr("fill", d => problematicStates.has(d.properties.name) ? "blue" : "red");
  
         })
         .catch(error => console.error("Errore nel caricamento dei dati degli stati americani:", error));
