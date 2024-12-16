@@ -2,7 +2,6 @@
 let width = document.querySelector(".responsive-svg-container").clientWidth;
 let height = document.querySelector(".responsive-svg-container").clientHeight;
 
-
 // Crea l'SVG
 const svg = d3
     .select("#map")
@@ -54,7 +53,7 @@ d3.json("../dataset/world-states.geojson.json")
             .enter()
             .append("path")
             .attr("d", path)
-            .attr("fill", "#b3cde0")
+            .attr("fill", "#b2cddf")
             .attr("stroke", "#03396c")
             .attr("stroke-width", 0.5)
             .on("mouseover", function(event, d) {
@@ -119,7 +118,7 @@ function calculateDegrees() {
     );
 
     const colorScale = d3.scaleSequential()
-    .domain([0, Math.max(...Object.values(selectedTimeDegrees))/5]) // Intervallo dati
+    .domain([0, Math.max(...Object.values(selectedTimeDegrees))/2]) // Intervallo dati
     .interpolator(d3.interpolateBlues);
 
     svg.selectAll(".us-states")

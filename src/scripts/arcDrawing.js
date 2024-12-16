@@ -114,7 +114,7 @@ function drawArc(source, target, color = "black") {
         .attr("d", d3.geoPath().projection(projection))
         .attr("fill", "none")
         .attr("stroke", color)
-        .attr("stroke-width", 2)
+        .attr("stroke-width", 1.5)
         .attr("class", `arc-${source.properties.NAME.replace(/\s+/g, '-')}`);
 }
 
@@ -155,10 +155,11 @@ function drawConnections(selectedState, selectedStatesArray, usaData, worldData,
     const maxPassengers = d3.max(degree, d => d.passengers);
 
     // Definisci una scala di colori
-    const colorScale = d3.scaleLinear()
-    .domain([minPassengers, maxPassengers]) // Range di valori di passeggeri
-    .range(["#c6f5ca", "#1b5e20"]); // Verde chiaro -> Verde scuro
-
+    const colorScale = d3.scaleSequential(t => d3.interpolateReds(t + 0.2))
+    .domain([minPassengers, maxPassengers]);
+ // Range di valori di passeggeri
+    //.interpolate(d3.interpolateReds); // Interpolazione di colori rossi
+    //.range(["#df9f9f", "#7b1315"]); // Verde chiaro -> Verde scuro
 
     degree.forEach((route) => {
         const target = worldData.features.find(
