@@ -93,29 +93,28 @@ function getValidCentroid(feature) {
 }
 
 //GRAFIC FUNCTIONS FOR ARCS
-function drawArc(source, target, color = "black") {
-    // Controlla se gli stati sono nel dataset corretto
-    const sourceCoords = source.properties.NAME 
-        ? projection(getValidCentroid(source)) // Se è uno stato US
-        : projection(getValidCentroid(source));
+function drawArc(source, target, color = "black", tension = 0.2) {
+    const sourceCoords = projection(getValidCentroid(source));
+    const targetCoords = projection(getValidCentroid(target));
 
-    const targetCoords = target.properties.name 
-        ? projection(getValidCentroid(target)) // Se è uno stato estero
-        : projection(getValidCentroid(target));
+    const midPoint = [
+        (sourceCoords[0] + targetCoords[0]) / 2,
+        (sourceCoords[1] + targetCoords[1]) / 2 - tension * Math.abs(sourceCoords[0] - targetCoords[0])
+    ];
+
+    const lineGenerator = d3.line()
+        .x(d => d[0])
+        .y(d => d[1])
+        .curve(d3.curveBasis); 
 
     svg.append("path")
-        .datum({
-            type: "LineString",
-            coordinates: [
-                getValidCentroid(source), 
-                getValidCentroid(target)
-            ]
-        })
-        .attr("d", d3.geoPath().projection(projection))
+        .datum([sourceCoords, midPoint, targetCoords])
+        .attr("d", lineGenerator)
         .attr("fill", "none")
         .attr("stroke", color)
         .attr("stroke-width", 1.5)
-        .attr("class", `arc-${source.properties.NAME.replace(/\s+/g, '-')}`);
+        .attr("class", `arc-${source.properties.NAME.replace(/\s+/g, '-')}`)
+        .attr("clip-path", "url(#clip)");
 }
 
 
@@ -124,7 +123,7 @@ function drawConnections(selectedState, selectedStatesArray, usaData, worldData,
     selectedStatesArray.push(selectedState);
   
     // Evidenzia lo stato selezionato
-    selectedState.attr("fill", "red");
+    selectedState.attr("fill", "#4682B4");
   
     // Recupera anno e mese selezionati
     const selectedYear = document.getElementById("yearSlider").value;

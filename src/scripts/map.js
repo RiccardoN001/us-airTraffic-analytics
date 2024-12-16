@@ -8,6 +8,16 @@ const svg = d3
     .attr("viewBox", `0 0 ${width} ${height}`)
     .style("border", "1px solid black");
 
+svg.append("defs")
+.append("clipPath")
+.attr("id", "clip")
+.append("rect")
+.attr("x", 0)
+.attr("y", 0)
+.attr("width", width)
+.attr("height", height);
+
+
 // Definisci la proiezione centrata sull'America
 let projection = d3.geoMercator()
     .scale(width / 6)
@@ -77,7 +87,7 @@ d3.json("../dataset/world-states.geojson.json")
             .enter().append("circle")
             .attr("cx", d => projection(getValidCentroid(d))[0])
             .attr("cy", d => projection(getValidCentroid(d))[1])
-            .attr("r", 1)
+            .attr("r", 0)       //porre uguale a 1 per debug
             .attr("fill", "red")
             .attr("fill", d => problematicStates.has(d.properties.name) ? "blue" : "red");
     })
@@ -169,20 +179,20 @@ d3.json("../dataset/us-states.geojson.json")
             .attr("stroke", "#03396c")
             .attr("stroke-width", 0.5)
             .on("mouseover", function(event, d) {
-            let stateMouseOver = d3.select(this);
+                let stateMouseOver = d3.select(this);
 
-            const stateName = d.properties.NAME; // Nome dello stato
-            let degree = selectedTimeDegrees[stateName] == undefined ? 0 : selectedTimeDegrees[stateName];
-            showTooltip(tooltip, event, `<strong>${stateName}</strong><br>Degree: ${degree}`);
+                const stateName = d.properties.NAME; // Nome dello stato
+                let degree = selectedTimeDegrees[stateName] == undefined ? 0 : selectedTimeDegrees[stateName];
+                showTooltip(tooltip, event, `<strong>${stateName}</strong><br>Degree: ${degree}`);
 
-            if(!selectedStatesArray.some(state => state.node() === stateMouseOver.node()) && selectedStatesArray.length != 0){
-                stateMouseOver.raise().attr("fill", "#f08080");
-                reRaiseArcs();
-            }
-            else{
-                stateMouseOver.raise().attr("stroke-width", 1);
-                reRaiseArcs();
-            }
+                if(!selectedStatesArray.some(state => state.node() === stateMouseOver.node()) && selectedStatesArray.length != 0){
+                    stateMouseOver.raise().attr("fill", "#7CA8CA");
+                    reRaiseArcs();
+                }
+                else{
+                    stateMouseOver.raise().attr("stroke-width", 1);
+                    reRaiseArcs();
+                }
             })
             .on("mousemove", function(event) {
             // Mantieni il tooltip aggiornato con la posizione del mouse
@@ -246,7 +256,7 @@ d3.json("../dataset/us-states.geojson.json")
                 .attr("class", "us-nodes")
                 .attr("cx", d => projection(getValidCentroid(d))[0])
                 .attr("cy", d => projection(getValidCentroid(d))[1])
-                .attr("r", 1)  // Valore del raggio aumentato per visibilità
+                .attr("r", 0)    //porre uguale a 1 per debug
                 .attr("fill", d => problematicStates.has(d.properties.name) ? "blue" : "red");
  
         })
