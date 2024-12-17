@@ -116,17 +116,25 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
     // Aggiungi i listener agli slider
     document.getElementById("yearSlider").addEventListener("input", (e) => {
       console.log(`Anno selezionato: ${e.target.value}`);
-      calculateDegrees();
       updateSliderLabels();
-      drawConnections();
+
+      if(selectedStatesArray.length == 0) {
+        calculateDegrees();
+      } else {
+        drawConnections();
+      }
 
     });
 
     document.getElementById("monthSlider").addEventListener("input", (e) => {
       console.log(`Mese selezionato: ${e.target.value}`);
-      calculateDegrees();
       updateSliderLabels();
-      drawConnections();
+      
+      if(selectedStatesArray.length == 0) {
+        calculateDegrees();
+      } else {
+        drawConnections();
+      }
 
     });
   };
