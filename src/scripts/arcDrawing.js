@@ -153,46 +153,56 @@ function drawConnections(selectedState, selectedStatesArray, usaData, worldData,
         route.US_state === source.properties.NAME
     );
 
-    // Calcola il minimo e il massimo dei passeggeri
-    const minPassengers = d3.min(degree, d => d.passengers);
-    const maxPassengers = d3.max(degree, d => d.passengers);
+    const selectedArc = getSelectedArc(); // Ottieni il valore selezionato: passengers, flights o allView
+    console.log(selectedArc);
 
-    // Definisci una scala di colori
-    const colorScale = d3.scaleSequential(t => d3.interpolateReds(t + 0.2))
-    .domain([minPassengers, maxPassengers]);
- // Range di valori di passeggeri
-    //.interpolate(d3.interpolateReds); // Interpolazione di colori rossi
-    //.range(["#df9f9f", "#7b1315"]); // Verde chiaro -> Verde scuro
+    let minValue, maxValue, colorScale, valueField;
 
+    // Determina il comportamento in base alla selezione
+    if (selectedArc === "passengers") {
+        valueField = "passengers";
+        minValue = d3.min(degree, d => d.passengers);
+        maxValue = d3.max(degree, d => d.passengers);
+        colorScale = d3.scaleSequential(t => d3.interpolateReds(t + 0.2))
+                       .domain([minValue, maxValue]);
+    } 
+    else if (selectedArc === "flights") {
+        valueField = "flights";
+        minValue = d3.min(degree, d => d.flights);
+        maxValue = d3.max(degree, d => d.flights);
+        colorScale = d3.scaleSequential(t => d3.interpolateBlues(t + 0.2))
+                       .domain([minValue, maxValue]);
+    } 
+    else if (selectedArc === "allview") {
+        valueField = "static"; // Flag per il comportamento statico
+        colorScale = null; // Nessuna scala colore
+    }
+
+    // Aggiorna la visualizzazione
     degree.forEach((route) => {
         const target = worldData.features.find(
-          (d) => d.properties.name === route.FG_state
+            (d) => d.properties.name === route.FG_state
         );
-      
+
         if (!target) {
-          console.warn(`Target state ${route.FG_state} not found in worldData.`);
-          return;
+            console.warn(`Target state ${route.FG_state} not found in worldData.`);
+            return;
         }
-      
-        console.log(
-          "Target:",
-          target.properties.name,
-          "Source:",
-          source.properties.NAME,
-          "Passengers:",
-          route.passengers
-        );
-      
-        // Calcola il colore in base al numero di passeggeri
-        const arcColor = colorScale(route.passengers);
-      
+
+        let arcColor;
+        if (valueField === "static") {
+            arcColor = "#000000"; // Nero statico per allview
+        } else {
+            const routeValue = route[valueField]; // Valore dinamico: passengers o flights
+            arcColor = colorScale ? colorScale(routeValue) : "#000000"; // Usa scala colore se esiste
+        }
         // Disegna l'arco
         drawArc(source, target, arcColor);
 
         // Contrassegna lo stato estero
         svg.selectAll("path")
             .filter((d) => d && d.properties && d.properties.name === route.FG_state)
-            .attr("fill", "#4682B4"); 
+            .attr("fill", "#4682B4");
     });
   }
 

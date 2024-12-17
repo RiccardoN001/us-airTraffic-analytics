@@ -131,9 +131,187 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
     });
   };
 
+  const createRadioButtonContainer = () => {
+    // Rimuove il contenitore precedente se esiste
+    const existingMiddleContainer = document.getElementById("middle-container");
+    if (existingMiddleContainer) {
+        existingMiddleContainer.remove();
+    }
+
+    const containerHeight = container.clientHeight;
+    const containerWidth = container.clientWidth;
+
+    // Crea il contenitore principale
+    const middleContainer = document.createElement("div");
+    middleContainer.id = "middle-container";
+    middleContainer.style.position = "absolute";
+    middleContainer.style.top = `${containerHeight / 2}px`;
+    middleContainer.style.right = "0";
+    middleContainer.style.height = `${containerHeight / 8}px`;
+    middleContainer.style.width = `${document.body.clientWidth - containerWidth}px`;
+    middleContainer.style.display = "flex";
+    middleContainer.style.alignItems = "center";
+    middleContainer.style.justifyContent = "center";
+    middleContainer.style.overflow = "hidden"; // Evita che gli elementi escano dal container
+    middleContainer.style.boxSizing = "border-box"; // Considera padding e bordi nelle dimensioni totali
+
+    // Crea il contenitore dei radio button
+    const radioContainer = document.createElement("div");
+    radioContainer.className = "radio-container";
+    radioContainer.style.display = "flex";
+    radioContainer.style.flexDirection = "row";
+    radioContainer.style.justifyContent = "space-around";
+    radioContainer.style.alignItems = "center";
+    radioContainer.style.width = "100%"; // Adatta alla larghezza del contenitore
+    radioContainer.style.height = "100%"; // Adatta all'altezza del contenitore
+    radioContainer.style.boxSizing = "border-box";
+
+    // Funzione per creare un radio button con etichetta
+    const createRadioButton = (value, labelText, isChecked = false) => {
+        const radioWrapper = document.createElement("div");
+        radioWrapper.style.display = "flex";
+        radioWrapper.style.alignItems = "center";
+        radioWrapper.style.justifyContent = "center";
+        radioWrapper.style.margin = "0 5px"; // Margine tra i radio button
+        radioWrapper.style.flexShrink = "1"; // Adatta i radio button allo spazio disponibile
+
+        const radioInput = document.createElement("input");
+        radioInput.type = "radio";
+        radioInput.name = "arcSelection";
+        radioInput.id = `arcSelection-${value}`;
+        radioInput.value = value;
+        if (isChecked) {
+            radioInput.checked = true; // Imposta la selezione predefinita
+        }
+
+        const label = document.createElement("label");
+        label.htmlFor = radioInput.id;
+        label.textContent = labelText;
+        label.style.cursor = "pointer"; // Indica che è cliccabile
+        label.style.padding = "0.5em 1em";
+        label.style.margin = "0";
+        label.style.border = "1px solid #ccc";
+        label.style.borderRadius = "5px";
+        label.style.backgroundColor = "#fff";
+        label.style.transition = "background-color 0.3s, color 0.3s";
+
+        if (isChecked) {
+          label.style.backgroundColor = "#0043ed";
+          label.style.color = "#fff";
+          label.style.borderColor = "#0043ed";
+        }
+
+        // Effetto di selezione per il label
+        radioInput.addEventListener("change", () => {
+            document.querySelectorAll(`label[for^="arcSelection-"]`).forEach(l => {
+                l.style.backgroundColor = "#fff";
+                l.style.color = "#000";
+            });
+            label.style.backgroundColor = "#0043ed";
+            label.style.color = "#fff";
+        });
+
+        // Aggiunge radio button e label al wrapper
+        radioWrapper.appendChild(radioInput);
+        radioWrapper.appendChild(label);
+
+        return radioWrapper;
+    };
+
+    // Aggiunge i radio button
+    radioContainer.appendChild(createRadioButton("passengers", "Passengers", true));
+    radioContainer.appendChild(createRadioButton("flights", "Flights"));
+    radioContainer.appendChild(createRadioButton("allView", "All View"));
+
+    // Aggiunge il contenitore dei radio button al contenitore principale
+    middleContainer.appendChild(radioContainer);
+    document.body.appendChild(middleContainer);
+};
+
+
+const createColormapContainer = () => {
+  // Rimuove il contenitore precedente se esiste
+  const existingLowerContainer = document.getElementById("lower-container");
+  if (existingLowerContainer) {
+    existingLowerContainer.remove();
+  }
+
+  const containerHeight = container.clientHeight;
+  const containerWidth = container.clientWidth;
+
+  // Crea il contenitore principale
+  const lowerContainer = document.createElement("div");
+  lowerContainer.id = "lower-container";
+  lowerContainer.style.position = "absolute";
+  lowerContainer.style.top = `${containerHeight * (5 / 8)}px`;
+  lowerContainer.style.right = "0";
+  lowerContainer.style.height = `${containerHeight / 8}px`; // Occupa 1/8 dell'altezza
+  lowerContainer.style.width = `${document.body.clientWidth - containerWidth}px`;
+  lowerContainer.style.display = "flex";
+  lowerContainer.style.flexDirection = "column";
+  lowerContainer.style.alignItems = "center";
+  lowerContainer.style.justifyContent = "center";
+
+  // Contenitore per la colormap
+  const colormapContainer = document.createElement("div");
+  colormapContainer.id = "colormap-container";
+  colormapContainer.style.display = "flex";
+  colormapContainer.style.flexDirection = "column";
+  colormapContainer.style.alignItems = "center";
+  colormapContainer.style.width = "90%"; // Occupa quasi tutta la larghezza disponibile
+
+  // Barra della colormap (con estremi arrotondati)
+  const colorBar = document.createElement("div");
+  colorBar.style.width = "100%";
+  colorBar.style.height = "10px";
+  colorBar.style.background = "linear-gradient(to right, #FFFFFF, #08306b)"; // Da blu a rosso
+  colorBar.style.borderRadius = "10px"; // Estremi arrotondati
+  colorBar.style.border = "1px solid #ccc";
+
+  // Contenitore per le etichette sotto la barra
+  const labelContainer = document.createElement("div");
+  labelContainer.style.display = "flex";
+  labelContainer.style.justifyContent = "space-between";
+  labelContainer.style.width = "100%";
+  labelContainer.style.marginTop = "5px";
+
+  // Etichetta iniziale (valore minimo)
+  const labelStart = document.createElement("label");
+  labelStart.textContent = "";
+  labelStart.id = "labelStartColormap";
+  labelStart.style.fontSize = "12px";
+  labelStart.style.fontWeight = "bold";
+  labelStart.style.color = "#333";
+
+  // Etichetta finale (valore massimo)
+  const labelEnd = document.createElement("label");
+  labelEnd.textContent = "";
+  labelEnd.id = "labelEndColormap";
+  labelEnd.style.fontSize = "12px";
+  labelEnd.style.fontWeight = "bold";
+  labelEnd.style.color = "#333";
+
+  // Aggiunge le etichette al contenitore
+  labelContainer.appendChild(labelStart);
+  labelContainer.appendChild(labelEnd);
+
+  // Aggiunge la barra e le etichette al contenitore principale
+  colormapContainer.appendChild(colorBar);
+  colormapContainer.appendChild(labelContainer);
+
+  // Aggiunge il contenitore principale al lowerContainer
+  lowerContainer.appendChild(colormapContainer);
+
+  // Aggiunge il lowerContainer al body
+  document.body.appendChild(lowerContainer);
+};
+
+
 
   // Crea i contenitori inizialmente
   createSliderContainer();
+  createRadioButtonContainer();
+  createColormapContainer();
   calculateDegrees();
 
   // Aggiungi un listener per il ridimensionamento della finestra
@@ -142,6 +320,13 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
 }).catch(function(error) {
   console.error("Errore durante il caricamento dei dati JSON:", error);
 });
+
+function getSelectedArc() {
+  const selectedRadio = document.querySelector('input[name="arcSelection"]:checked');
+  return selectedRadio ? selectedRadio.value : null; // Restituisce il valore selezionato o null se nessuno è selezionato
+}
+
+console.log("Valore selezionato:", getSelectedArc());
 
 // Funzione per aggiornare il valore delle label degli slider
 function updateSliderLabels() {

@@ -132,6 +132,10 @@ function calculateDegrees() {
     .domain([0, Math.max(...Object.values(selectedTimeDegrees))/2]) // Intervallo dati
     .interpolator(d3.interpolateBlues);
 
+    document.getElementById("labelEndColormap").textContent = Math.max(...Object.values(selectedTimeDegrees));
+    document.getElementById("labelStartColormap").textContent = 0;
+
+
     svg.selectAll(".us-states")
         .attr("fill", (d) => {
             const stateName = d.properties.NAME; // Nome corretto dallo stato

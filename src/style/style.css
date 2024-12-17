@@ -23,3 +23,51 @@ span {
     -moz-box-shadow: -0.25px 0.75px 9px -0.25px rgba(85,85,85,0.36);
     box-shadow: -0.25px 0.75px 9px -0.25px rgba(85,85,85,0.36);
 }
+
+#middle-container {
+    overflow: hidden; /* Evita che gli elementi escano */
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center; /* Centra i radio button */
+    align-items: center;
+    padding: 0 10px; /* Aggiunge un po' di padding ai lati */
+  }
+  
+  .radio-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap; /* Permette di andare a capo */
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    gap: 5px; /* Spazio tra i radio button */
+  }
+  
+  .radio-container label {
+    padding: 0.3em 0.8em; /* Riduce il padding delle etichette */
+    margin: 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.3s, color 0.3s;
+    font-size: 14px; /* Riduci il font se necessario */
+  }
+  
+  .radio-container label:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .radio-container input[type="radio"] {
+    display: none; /* Nasconde il radio nativo */
+  }
+  
+  .radio-container input[type="radio"]:checked + label {
+    background-color: #0043ed;
+    color: #fff;
+    border-color: #0043ed;
+  }
+  
+  
+  
