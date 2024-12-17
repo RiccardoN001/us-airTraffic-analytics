@@ -94,30 +94,33 @@ function getValidCentroid(feature) {
 
 //GRAFIC FUNCTIONS FOR ARCS
 function drawArc(source, target, color = "black") {
+    
     // Controlla se gli stati sono nel dataset corretto
-    const sourceCoords = source.properties.NAME 
+    /*const sourceCoords = source.properties.NAME 
         ? projection(getValidCentroid(source)) // Se è uno stato US
         : projection(getValidCentroid(source));
 
     const targetCoords = target.properties.name 
         ? projection(getValidCentroid(target)) // Se è uno stato estero
         : projection(getValidCentroid(target));
+    */
+
+    const currentTransform = d3.zoomTransform(svg.node());
+    const sourceCoords = projection(getValidCentroid(source));
+    const targetCoords = projection(getValidCentroid(target));
 
     svg.append("path")
         .datum({
             type: "LineString",
-            coordinates: [
-                getValidCentroid(source), 
-                getValidCentroid(target)
-            ]
+            coordinates: [getValidCentroid(source), getValidCentroid(target)]
         })
         .attr("d", d3.geoPath().projection(projection))
+        .attr("transform", currentTransform)
         .attr("fill", "none")
         .attr("stroke", color)
         .attr("stroke-width", 1.5)
         .attr("class", `arc-${source.properties.NAME.replace(/\s+/g, '-')}`);
 }
-
 
 function drawConnections(selectedState, selectedStatesArray, usaData, worldData, routes) {
     // Aggiungi lo stato selezionato all'array
@@ -185,6 +188,11 @@ function drawConnections(selectedState, selectedStatesArray, usaData, worldData,
       
         // Disegna l'arco
         drawArc(source, target, arcColor);
+
+        // Contrassegna lo stato estero
+        svg.selectAll("path")
+            .filter((d) => d && d.properties && d.properties.name === route.FG_state)
+            .attr("fill", "#4682B4"); 
     });
   }
 

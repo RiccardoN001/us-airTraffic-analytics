@@ -35,7 +35,8 @@ const zoom = d3.zoom()
     ])
     .on("zoom", (event) => {
         svg.selectAll("path").attr("transform", event.transform);
-        svg.selectAll("circle").attr("transform", event.transform);  // Trasforma i nodi
+        svg.selectAll("circle").attr("transform", event.transform);
+        svg.selectAll("[class^='arc-']").attr("transform", event.transform);
     });
     
 
