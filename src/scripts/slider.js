@@ -118,7 +118,7 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
       console.log(`Anno selezionato: ${e.target.value}`);
       calculateDegrees();
       updateSliderLabels();
-      svg.selectAll("[class^='arc-']").remove();
+      drawConnections();
 
     });
 
@@ -126,10 +126,14 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
       console.log(`Mese selezionato: ${e.target.value}`);
       calculateDegrees();
       updateSliderLabels();
-      svg.selectAll("[class^='arc-']").remove();
+      drawConnections();
 
     });
   };
+
+
+
+
 
   const createRadioButtonContainer = () => {
     // Rimuove il contenitore precedente se esiste
@@ -226,7 +230,19 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
     // Aggiunge il contenitore dei radio button al contenitore principale
     middleContainer.appendChild(radioContainer);
     document.body.appendChild(middleContainer);
+
+    document.querySelectorAll('input[name="arcSelection"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        console.log(`Opzione selezionata: ${e.target.value}`);
+        drawConnections();
+      });
+    });
 };
+
+
+
+
+
 
 
 const createColormapContainer = () => {
@@ -262,9 +278,10 @@ const createColormapContainer = () => {
 
   // Barra della colormap (con estremi arrotondati)
   const colorBar = document.createElement("div");
+  colorBar.id = "color-bar";
   colorBar.style.width = "100%";
   colorBar.style.height = "10px";
-  colorBar.style.background = "linear-gradient(to right, #FFFFFF, #08306b)"; // Da blu a rosso
+  colorBar.style.background = "linear-gradient(to right, #FFFFFF, #08306b)";
   colorBar.style.borderRadius = "10px"; // Estremi arrotondati
   colorBar.style.border = "1px solid #ccc";
 
@@ -305,7 +322,6 @@ const createColormapContainer = () => {
   // Aggiunge il lowerContainer al body
   document.body.appendChild(lowerContainer);
 };
-
 
 
   // Crea i contenitori inizialmente

@@ -122,89 +122,89 @@ function drawArc(source, target, color = "black") {
         .attr("class", `arc-${source.properties.NAME.replace(/\s+/g, '-')}`);
 }
 
-function drawConnections(selectedState, selectedStatesArray, usaData, worldData, routes) {
-    // Aggiungi lo stato selezionato all'array
-    selectedStatesArray.push(selectedState);
-  
-    // Evidenzia lo stato selezionato
-    selectedState.attr("fill", "#4682B4");
-  
-    // Recupera anno e mese selezionati
-    const selectedYear = document.getElementById("yearSlider").value;
-    const selectedMonth = document.getElementById("monthSlider").value;
-  
-    // Trova la sorgente nello stato selezionato
-    const source = usaData.features.find(
-      (d) => d.properties.NAME === selectedState.data()[0].properties.NAME
-    );
-  
-    if (!source) {
-      console.error("Source state not found in usaData.");
-      return;
-    }
+function drawConnections() {
+    // Pulisce gli archi esistenti per evitare duplicati
+    svg.selectAll("[class^='arc-']").remove();
 
-    const arcColor = assignColor();
-  
-    // Filtra le rotte per anno, mese e stato sorgente
-    const degree = routes.filter(
-      (route) =>
-        route.year == selectedYear &&
-        route.month == selectedMonth &&
-        route.US_state === source.properties.NAME
-    );
+    // Itera su tutti gli stati selezionati
+    selectedStatesArray.forEach((selectedState) => {
+        selectedState.attr("fill", "#4682B4");
 
-    const selectedArc = getSelectedArc(); // Ottieni il valore selezionato: passengers, flights o allView
-    console.log(selectedArc);
+        // Recupera anno e mese selezionati
+        const selectedYear = document.getElementById("yearSlider").value;
+        const selectedMonth = document.getElementById("monthSlider").value;
 
-    let minValue, maxValue, colorScale, valueField;
-
-    // Determina il comportamento in base alla selezione
-    if (selectedArc === "passengers") {
-        valueField = "passengers";
-        minValue = d3.min(degree, d => d.passengers);
-        maxValue = d3.max(degree, d => d.passengers);
-        colorScale = d3.scaleSequential(t => d3.interpolateReds(t + 0.2))
-                       .domain([minValue, maxValue]);
-    } 
-    else if (selectedArc === "flights") {
-        valueField = "flights";
-        minValue = d3.min(degree, d => d.flights);
-        maxValue = d3.max(degree, d => d.flights);
-        colorScale = d3.scaleSequential(t => d3.interpolateBlues(t + 0.2))
-                       .domain([minValue, maxValue]);
-    } 
-    else if (selectedArc === "allview") {
-        valueField = "static"; // Flag per il comportamento statico
-        colorScale = null; // Nessuna scala colore
-    }
-
-    // Aggiorna la visualizzazione
-    degree.forEach((route) => {
-        const target = worldData.features.find(
-            (d) => d.properties.name === route.FG_state
+        // Trova la sorgente nello stato selezionato
+        const source = usaData.features.find(
+            (d) => d.properties.NAME === selectedState.data()[0].properties.NAME
         );
 
-        if (!target) {
-            console.warn(`Target state ${route.FG_state} not found in worldData.`);
+        if (!source) {
+            console.error("Source state not found in usaData.");
             return;
         }
 
-        let arcColor;
-        if (valueField === "static") {
-            arcColor = "#000000"; // Nero statico per allview
-        } else {
-            const routeValue = route[valueField]; // Valore dinamico: passengers o flights
-            arcColor = colorScale ? colorScale(routeValue) : "#000000"; // Usa scala colore se esiste
-        }
-        // Disegna l'arco
-        drawArc(source, target, arcColor);
+        const arcColor = assignColor();
 
-        // Contrassegna lo stato estero
-        svg.selectAll("path")
-            .filter((d) => d && d.properties && d.properties.name === route.FG_state)
-            .attr("fill", "#4682B4");
+        // Filtra le rotte per anno, mese e stato sorgente
+        const degree = routes.filter(
+            (route) =>
+                route.year == selectedYear &&
+                route.month == selectedMonth &&
+                route.US_state === source.properties.NAME
+        );
+
+        const selectedArc = getSelectedArc();
+        let minValue, maxValue, colorScale, valueField;
+
+        if (selectedArc === "passengers") {
+            valueField = "passengers";
+            minValue = d3.min(degree, d => d.passengers);
+            maxValue = d3.max(degree, d => d.passengers);
+            colorScale = d3.scaleSequential(t => d3.interpolateReds(t + 0.2))
+                           .domain([minValue, maxValue]);
+        } 
+        else if (selectedArc === "flights") {
+            valueField = "flights";
+            minValue = d3.min(degree, d => d.flights);
+            maxValue = d3.max(degree, d => d.flights);
+            colorScale = d3.scaleSequential(t => d3.interpolateBlues(t + 0.2))
+                           .domain([minValue, maxValue]);
+        } 
+        else {
+            valueField = "static";
+            colorScale = null;
+        }
+
+        // Disegna gli archi per ogni rotta collegata
+        degree.forEach((route) => {
+            const target = worldData.features.find(
+                (d) => d.properties.name === route.FG_state
+            );
+
+            if (!target) {
+                console.warn(`Target state ${route.FG_state} not found in worldData.`);
+                return;
+            }
+
+            let arcColor;
+            if (valueField === "static") {
+                arcColor = "#000000";
+            } else {
+                const routeValue = route[valueField];
+                arcColor = colorScale ? colorScale(routeValue) : "#000000";
+            }
+
+            drawArc(source, target, arcColor);
+
+            // Contrassegna lo stato estero
+            svg.selectAll("path")
+                .filter((d) => d && d.properties && d.properties.name === route.FG_state)
+                .attr("fill", "#4682B4");
+        });
     });
-  }
+}
+
 
 function reRaiseArcs() {
     svg.selectAll("[class^='arc-']").raise();
