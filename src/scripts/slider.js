@@ -411,6 +411,7 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
                 addStateToSelectedArray(state);
             }            
         });
+        document.getElementById("color-bar").style.background = "linear-gradient(to right, #fcbaa1, #67000d)";
         drawConnections();
         zoomOutWorld();
     });

@@ -222,8 +222,9 @@ Promise.all([
             } 
             else {
                 selectedStatesArray.push(selectedState);
-                drawConnections();
-            }
+                drawConnections(); 
+            }            
+            updateForeignStateColors();
             });
             
             svg.selectAll(".us-nodes")

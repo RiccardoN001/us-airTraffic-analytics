@@ -168,7 +168,7 @@ function drawConnections() {
             valueField = "flights";
             minValue = d3.min(degree, d => d.flights);
             maxValue = d3.max(degree, d => d.flights);
-            colorScale = d3.scaleSequential(t => d3.interpolateBlues(t + 0.2))
+            colorScale = d3.scaleSequential(t => d3.interpolateReds(t + 0.2))
                            .domain([minValue, maxValue]);
         } 
         else {
@@ -208,4 +208,39 @@ function drawConnections() {
 
 function reRaiseArcs() {
     svg.selectAll("[class^='arc-']").raise();
+}
+
+function updateForeignStateColors() {
+    // Resetta il colore di tutti gli stati esteri
+    svg.selectAll("path")
+        .filter(d => d && d.properties && d.properties.name)
+        .attr("fill", "#b2cddf");
+
+    // Itera su tutte le connessioni attive
+    selectedStatesArray.forEach((selectedState) => {
+        const source = usaData.features.find(
+            d => d.properties.NAME === selectedState.data()[0].properties.NAME
+        );
+
+        const selectedYear = document.getElementById("yearSlider").value;
+        const selectedMonth = document.getElementById("monthSlider").value;
+
+        const connections = routes.filter(
+            route => route.year == selectedYear && 
+                     route.month == selectedMonth && 
+                     route.US_state === source.properties.NAME
+        );
+
+        connections.forEach(route => {
+            const target = worldData.features.find(
+                d => d.properties.name === route.FG_state
+            );
+
+            if (target) {
+                svg.selectAll("path")
+                    .filter(d => d && d.properties && d.properties.name === route.FG_state)
+                    .attr("fill", "#4682B4"); // Colore di connessione attiva
+            }
+        });
+    });
 }
