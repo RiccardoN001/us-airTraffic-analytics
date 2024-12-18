@@ -71,6 +71,12 @@ var states = new Array();
 var routes = new Array();
 let selectedStatesArray = new Array();
 let selectedTimeDegrees = {};
+let absoluteMaxPassengers = null;
+let absoluteMinPassengers = null;
+let absoluteMaxFlights = null;
+let absoluteMinFlights = null;
+let absoluteMaxConnections = null;
+
 
 function getSelectedStatesArray(){
     return selectedStatesArray;
@@ -89,11 +95,23 @@ Promise.all([
     d3.json("../dataset/us-states.geojson.json"),
     d3.json("../../dataset/International_Report.json")
 ]).then(([world, usa, reportData]) => {
-    
     worldData = world;
     usaData = usa;
     states = reportData.nodes;
     routes = reportData.edges;
+
+    absoluteMaxPassengers = d3.max(routes, d => d.passengers);
+    absoluteMinPassengers = d3.min(routes, d => d.passengers);
+    absoluteMaxFlights = d3.max(routes, d => d.flights);
+    absoluteMinFlights = d3.min(routes, d => d.flights);
+    absoluteMaxConnections = calculateMaxAbsoluteDegree();
+
+    console.log("Max passengers:", absoluteMaxPassengers);
+    console.log("Min passengers:", absoluteMinPassengers);
+    console.log("Max flights:", absoluteMaxFlights);
+    console.log("Min flights:", absoluteMinFlights);
+    console.log("Max connections:", absoluteMaxConnections);
+
 
     // Chiama zoomToAmerica dopo aver confermato che usaData è pronto
     zoomToAmerica();
@@ -263,11 +281,10 @@ function calculateDegrees() {
     );
 
     const colorScale = d3.scaleSequential()
-    .domain([0, Math.max(...Object.values(selectedTimeDegrees))/2]) // Intervallo dati
+    .domain([0, absoluteMaxConnections]) // Intervallo dati
     .interpolator(d3.interpolateBlues);
 
-    document.getElementById("labelEndColormap").textContent = Math.max(...Object.values(selectedTimeDegrees));
-    document.getElementById("labelStartColormap").textContent = 0;
+    updateColorBar(0, absoluteMaxConnections, d3.scaleLinear().domain([0, 1]).range(["#FFFFFF, #08306b"]));
 
 
     svg.selectAll(".us-states")
@@ -286,4 +303,32 @@ function calculateDegrees() {
     console.log("Degrees:", selectedTimeDegrees);
     console.log("Number of elements:", Object.keys(selectedTimeDegrees).length);
     console.log("Degree massimo:", Math.max(...Object.values(selectedTimeDegrees)));
-}  
+} 
+
+function calculateMaxAbsoluteDegree(){
+    //per ogni anno e per ogni mese calcola il grado massimo di collegamenti, e salva il massimo assoluto
+    let absoluteMaxYears = d3.max(routes, d => d.year);
+    let absoluteMinYears = d3.min(routes, d => d.year);
+    let maxDegree = 0;
+    for(let i = absoluteMinYears; i <= absoluteMaxYears; i++){
+        for(let j = 1; j < 13; j++){
+            let degree = routes.filter((route) => route.year == i && route.month == j);
+            degree = degree.reduce((acc, { US_state, FG_state }) => {
+                // Aggiunge lo stato collegato al set associato allo stato americano
+                acc[US_state] = acc[US_state] || new Set();
+                acc[US_state].add(FG_state);
+                return acc;
+            }, {}); 
+
+            let selectedTimeDegrees = Object.fromEntries(
+                Object.entries(degree).map(([state, degree]) => [state, degree.size])
+            );
+
+            let maxDegreeMonth = Math.max(...Object.values(selectedTimeDegrees));
+            if(maxDegreeMonth > maxDegree){
+                maxDegree = maxDegreeMonth;
+            }
+        }
+    }
+    return maxDegree;
+}

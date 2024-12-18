@@ -411,7 +411,7 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
                 addStateToSelectedArray(state);
             }            
         });
-        document.getElementById("color-bar").style.background = "linear-gradient(to right, #fcbaa1, #67000d)";
+        updateColorBar(0, absoluteMaxConnections, d3.scaleLinear().domain([0, 1]).range(["#fcbaa1", "#67000d"]));
         drawConnections();
         zoomOutWorld();
     });
@@ -447,4 +447,11 @@ function updateSliderLabels() {
 function getMonthName(monthNumber) {
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     return months[monthNumber - 1]; // Subtract 1 because arrays are 0-indexed
+}
+
+function updateColorBar(minValue, maxValue, colorScale) {
+    const colorBar = document.getElementById("color-bar");
+    colorBar.style.background = `linear-gradient(to right, ${colorScale(0)}, ${colorScale(1)}`;
+    document.getElementById("labelStartColormap").textContent = minValue;
+    document.getElementById("labelEndColormap").textContent = maxValue;
 }
