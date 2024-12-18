@@ -93,7 +93,7 @@ function getValidCentroid(feature) {
 }
 
 //GRAFIC FUNCTIONS FOR ARCS
-function drawArc(source, target, color = "black") {
+function drawArc(source, target, color = "black", route) {
     
     // Controlla se gli stati sono nel dataset corretto
     /*const sourceCoords = source.properties.NAME 
@@ -119,7 +119,21 @@ function drawArc(source, target, color = "black") {
         .attr("fill", "none")
         .attr("stroke", color)
         .attr("stroke-width", 1.5)
-        .attr("class", `arc-${source.properties.NAME.replace(/\s+/g, '-')}`);
+        .attr("class", `arc-${source.properties.NAME.replace(/\s+/g, '-')}`)
+        .on("mouseover", function(event, d) {
+            d3.select(this)
+                .attr("stroke-width", 3)
+                .attr("stroke", "red"); // Cambia colore al passaggio del mouse
+            showTooltip(getTooltip(), event, `US State: <strong>${source.properties.NAME}</strong>
+                <br>Foreign State: <strong>${target.properties.name}</strong>
+                    <br>Number of Passengers: ${route["passengers"]}<br>Number of Flights: ${route["flights"]}`);
+        })
+        .on("mouseout", function(event, d) {
+            d3.select(this)
+                .attr("stroke-width", 1.5)
+                .attr("stroke", color); // Ripristina il colore originale
+            hideTooltip(getTooltip());
+        });
 }
 
 function drawConnections() {
@@ -170,7 +184,7 @@ function drawConnections() {
             colorScale = d3.scaleSequential(t => d3.interpolateReds(t + 0.2))
                            .domain([absoluteMinFlights, absoluteMaxFlights]);
             updateColorBar(absoluteMinFlights, absoluteMaxFlights, d3.scaleLinear().domain([0, 1]).range(["#fcbaa1", "#67000d"]));
-        } 
+        }
         else {
             valueField = "static";
             colorScale = null;
@@ -196,7 +210,7 @@ function drawConnections() {
                 arcColor = colorScale ? colorScale(routeValue) : "#000000";
             }
 
-            drawArc(source, target, arcColor);
+            drawArc(source, target, arcColor, route);
 
             // Contrassegna lo stato estero
             svg.selectAll("path")

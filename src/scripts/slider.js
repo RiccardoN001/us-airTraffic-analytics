@@ -414,6 +414,7 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
         updateColorBar(0, absoluteMaxConnections, d3.scaleLinear().domain([0, 1]).range(["#fcbaa1", "#67000d"]));
         drawConnections();
         zoomOutWorld();
+        updateForeignStateColors();
     });
 
     document.getElementById("button2").addEventListener("click", () => {
@@ -422,6 +423,7 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
         document.getElementById("color-bar").style.background = "linear-gradient(to right, #FFFFFF, #08306b)";
         calculateDegrees();
         zoomToAmerica();
+        updateForeignStateColors();
     });
 
     // Aggiungi un listener per il ridimensionamento della finestra

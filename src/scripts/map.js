@@ -62,6 +62,11 @@ const colorContinent = {
 };
 
 const tooltip = createTooltip();
+
+function getTooltip(){
+    return tooltip;
+}
+
 /////////////////////////////////////////////CHOROPLETH MAP//////////////////////////////////////////////////////////////
 // Carica i dati GeoJSON per la mappa del mondo
 
