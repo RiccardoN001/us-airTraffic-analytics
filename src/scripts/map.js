@@ -53,12 +53,12 @@ const problematicStates = new Set([
 
 //crea un dizionario in cui associa ogni continente ad un colore
 const colorContinent = {
-    "Africa": "red",
-    "Asia": "blue",
-    "Europe": "green",
-    "North America": "orange",
-    "Oceania": "purple",
-    "South America": "yellow",
+    "Africa": "#9c635c",
+    "Asia": "#acae89",
+    "Europe": "#568864",
+    "North America": "#609692",
+    "Oceania": "#78868f",
+    "South America": " #b68534",
 };
 
 const tooltip = createTooltip();
@@ -283,7 +283,6 @@ function calculateDegrees() {
     const colorScale = d3.scaleSequential()
     .domain([0, absoluteMaxConnections]) // Intervallo dati
     .interpolator(d3.interpolateBlues);
-
     updateColorBar(0, absoluteMaxConnections, d3.scaleLinear().domain([0, 1]).range(["#FFFFFF, #08306b"]));
 
 

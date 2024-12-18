@@ -159,12 +159,14 @@ function drawConnections() {
 
         if (selectedArc === "passengers") {
             valueField = "passengers";
+            d3.select("#lower-container").style("display", "block");
             colorScale = d3.scaleSequential(t => d3.interpolateReds(t + 0.2))
                            .domain([absoluteMinPassengers, absoluteMaxPassengers]);
             updateColorBar(absoluteMinPassengers, absoluteMaxPassengers, d3.scaleLinear().domain([0, 1]).range(["#fcbaa1", "#67000d"]));
         } 
         else if (selectedArc === "flights") {
             valueField = "flights";
+            d3.select("#lower-container").style("display", "block");
             colorScale = d3.scaleSequential(t => d3.interpolateReds(t + 0.2))
                            .domain([absoluteMinFlights, absoluteMaxFlights]);
             updateColorBar(absoluteMinFlights, absoluteMaxFlights, d3.scaleLinear().domain([0, 1]).range(["#fcbaa1", "#67000d"]));
@@ -172,6 +174,7 @@ function drawConnections() {
         else {
             valueField = "static";
             colorScale = null;
+            d3.select("#lower-container").style("display", "none");
         }
 
         // Disegna gli archi per ogni rotta collegata
