@@ -72,6 +72,18 @@ var routes = new Array();
 let selectedStatesArray = new Array();
 let selectedTimeDegrees = {};
 
+function getSelectedStatesArray(){
+    return selectedStatesArray;
+}
+
+function addStateToSelectedArray(state){
+    selectedStatesArray.push(state);
+}
+
+function removeAllStatesFromSelectedArray(){
+    selectedStatesArray = [];
+}
+
 Promise.all([
     d3.json("../dataset/world-states.geojson.json"),
     d3.json("../dataset/us-states.geojson.json"),
@@ -176,54 +188,54 @@ Promise.all([
         }
         })
         .on("click", function(event, d) {
-        // Seleziona lo stato cliccato
-        const selectedState = d3.select(this);
-
-        if(selectedStatesArray.length == 0){
-            //disattiva chropleth map
-            svg.selectAll(".us-states").attr("fill", "#b3cde0");
-            document.getElementById("color-bar").style.background = "linear-gradient(to right, #fcbaa1, #67000d)";
-            zoomOutWorld();
-        }
-
-        if(selectedStatesArray.some(state => state.node() === selectedState.node())){
-            // Rimuovi lo stato dall'array
-            selectedStatesArray = selectedStatesArray.filter(state => state.node() !== selectedState.node());
-
-            // Ripristina il colore originale
-            selectedState.attr("fill", "#b3cde0");
-            selectedState.attr("stroke-width", 0.5);
-
-            // Rimuovi gli archi associati allo stato e ripristina i colori
-            svg.selectAll(`.arc-${d.properties.NAME.replace(/\s+/g, '-')}`)
-                .each(function() {
-                    const color = d3.select(this).attr("stroke");
-                    releaseColor(color);
-                })
-                .remove();
+            // Seleziona lo stato cliccato
+            const selectedState = d3.select(this);
 
             if(selectedStatesArray.length == 0){
-            document.getElementById("color-bar").style.background = "linear-gradient(to right, #FFFFFF, #08306b)";
-            calculateDegrees();
-            zoomToAmerica();
+                //disattiva chropleth map
+                svg.selectAll(".us-states").attr("fill", "#b3cde0");
+                document.getElementById("color-bar").style.background = "linear-gradient(to right, #fcbaa1, #67000d)";
+                zoomOutWorld();
             }
-        } 
-        else {
-            selectedStatesArray.push(selectedState);
-            drawConnections();   
-        }
-        });
-        
-        svg.selectAll(".us-nodes")
-            .data(usaData.features)
-            .enter()
-            .append("circle")
-            .attr("class", "us-nodes")
-            .attr("cx", d => projection(getValidCentroid(d))[0])
-            .attr("cy", d => projection(getValidCentroid(d))[1])
-            .attr("r", 0);    //porre uguale a 1 per debug
-            //.attr("fill", d => problematicStates.has(d.properties.name) ? "blue" : "red");
-    })
+
+            if(selectedStatesArray.some(state => state.node() === selectedState.node())){
+                // Rimuovi lo stato dall'array
+                selectedStatesArray = selectedStatesArray.filter(state => state.node() !== selectedState.node());
+
+                // Ripristina il colore originale
+                selectedState.attr("fill", "#b3cde0");
+                selectedState.attr("stroke-width", 0.5);
+
+                // Rimuovi gli archi associati allo stato e ripristina i colori
+                svg.selectAll(`.arc-${d.properties.NAME.replace(/\s+/g, '-')}`)
+                    .each(function() {
+                        const color = d3.select(this).attr("stroke");
+                        releaseColor(color);
+                    })
+                    .remove();
+
+                if(selectedStatesArray.length == 0){
+                    document.getElementById("color-bar").style.background = "linear-gradient(to right, #FFFFFF, #08306b)";
+                    calculateDegrees();
+                    zoomToAmerica();
+                }
+            } 
+            else {
+                selectedStatesArray.push(selectedState);
+                drawConnections();
+            }
+            });
+            
+            svg.selectAll(".us-nodes")
+                .data(usaData.features)
+                .enter()
+                .append("circle")
+                .attr("class", "us-nodes")
+                .attr("cx", d => projection(getValidCentroid(d))[0])
+                .attr("cy", d => projection(getValidCentroid(d))[1])
+                .attr("r", 0);    //porre uguale a 1 per debug
+                //.attr("fill", d => problematicStates.has(d.properties.name) ? "blue" : "red");
+        })
     .catch((error) =>
         console.error("Errore nel caricamento dei dati del mondo:", error)
     );
@@ -273,9 +285,4 @@ function calculateDegrees() {
     console.log("Degrees:", selectedTimeDegrees);
     console.log("Number of elements:", Object.keys(selectedTimeDegrees).length);
     console.log("Degree massimo:", Math.max(...Object.values(selectedTimeDegrees)));
-}
-
-
-        
-
-  
+}  
