@@ -110,6 +110,8 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
         document.getElementById("yearSlider").value = 2020;
         document.getElementById("monthSlider").value = 1;
 
+        calculateMaxPassengersAndFlights();
+
         // Aggiungi i listener agli slider
         document.getElementById("yearSlider").addEventListener("input", (e) => {
             console.log(`Anno selezionato: ${e.target.value}`);
@@ -119,11 +121,13 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
             if (yearValue === 2020 && parseInt(document.getElementById("monthSlider").value) > 3) {
                 document.getElementById("monthSlider").value = 3;
             }
+            
             updateSliderLabels();
 
             if (selectedStatesArray.length == 0) {
                 calculateDegrees();
             } else {
+                calculateMaxPassengersAndFlights();
                 drawConnections();
                 updateForeignStateColors();
             }
@@ -142,6 +146,7 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
             if (selectedStatesArray.length == 0) {
                 calculateDegrees();
             } else {
+                calculateMaxPassengersAndFlights();
                 drawConnections();
                 updateForeignStateColors();
             }
@@ -417,6 +422,7 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
     calculateDegrees();
 
     document.getElementById("button1").addEventListener("click", () => {
+        console.log("Seleziona tutti gli stati");
         let usStates = d3.selectAll(".us-states");
         usStates.each(function() {
             let state = d3.select(this);
@@ -425,7 +431,6 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
                 addStateToSelectedArray(state);
             }            
         });
-        updateColorBar(0, absoluteMaxConnections, d3.scaleLinear().domain([0, 1]).range(["#fcbaa1", "#67000d"]));
         drawConnections();
         zoomOutWorld();
         updateForeignStateColors();

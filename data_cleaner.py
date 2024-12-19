@@ -44,6 +44,7 @@ passengers = passengers.groupby(['Year', 'Month', 'US_Airport_IATA', 'FG_Airport
 # inner join è usato per mantenere solo le righe che hanno corrispondenze in entrambi i dataset
 data = pd.merge(departures, passengers, on=['Year', 'Month', 'US_Airport_IATA', 'FG_Airport_IATA'], how='inner')
 
+print(data.head())
 
 #Quantifica la differenza tra i dataset iniziali e quello finale (significa che ci sono delle righe che non hanno corrispondenze)
 print(len(data))
@@ -71,6 +72,8 @@ data = pd.merge(data, iata_codes, left_on='FG_Airport_IATA', right_on='iata_code
 data = data.rename(columns={'Country_Name': 'FG_State', 'Country_Code': 'FG_State_id', 'Continent': 'FG_Continent'})
 data = data.drop(columns=['iata_code'], axis=1)
 
+print(data.head())
+
 
 #Riordino le colonne nell'ordine che preferisco
 column_order = [
@@ -79,15 +82,16 @@ column_order = [
 ]
 data = data[column_order]
 
+print(data.head())
 
-#raggruppo le tuple con stessi attributi: 
-#'Year','Month', 'US_State' ,'US_State_id', 'US_Continent', 'FG_State', 'FG_State_id', 'FG_Continent'
-#sommando il numero di voli ed il numero di passeggeri
-data = data.drop(columns=['US_Airport_IATA', 'FG_Airport_IATA'])
+#Ora voglio fare in modo che le tratte rispetto agli aeroporti siano uniche, quindi raggruppo per compagnia aerea sommando i voli e i passeggeri per poi cancellare la colonna Airline
+data = data.drop(columns=['US_Airport', 'FG_Airport'])
 data = data.groupby(['Year','Month', 'US_State' ,'US_State_id', 'US_Continent', 'FG_State', 'FG_State_id', 'FG_Continent'], as_index=False).agg({
     'Passengers': 'sum',
     'Flights': 'sum'
 })
+
+print(data.head())
 
 
 #drop dei campioni che hanno 0 passeggeri o voli
@@ -128,7 +132,7 @@ print(data.head())
 print(f"Numero di campioni nel DataFrame filtrato: {len(data)}")
 
 #Salva il dataset finale in un file csv
-data.to_csv('dataset/International_Report.csv', index=False)
+#data.to_csv('dataset/International_Report.csv', index=False)
 
 
 ###############################################################  JSON  ###############################################################
@@ -181,3 +185,4 @@ print(len(dataset['nodes']), len(dataset['edges']))
 
 with open('dataset/International_Report.json', 'w') as f:
   json.dump(dataset, f, indent=3)
+

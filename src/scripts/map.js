@@ -76,6 +76,10 @@ var states = new Array();
 var routes = new Array();
 let selectedStatesArray = new Array();
 let selectedTimeDegrees = {};
+let maxPassengers = 0;
+let minPassengers = 0;
+let maxFlights = 0;
+let minFlights = 0;
 
 /*
 let absoluteMaxPassengers = null;
@@ -106,6 +110,7 @@ Promise.all([
     usaData = usa;
     states = reportData.nodes;
     routes = reportData.edges;
+    
 
     /*Possibile idea di calcolare il grado massimo di collegamenti assoluto
     absoluteMaxPassengers = d3.max(routes, d => d.passengers);
@@ -124,7 +129,6 @@ Promise.all([
 
     // Chiama zoomToAmerica dopo aver confermato che usaData è pronto
     zoomToAmerica();
-
     // Disegna la mappa
     svg.selectAll("path")
         .data(worldData.features)
@@ -149,6 +153,7 @@ Promise.all([
             let stateMouseOut = d3.select(this);
             hideTooltip(tooltip);
         });
+
 
     svg.selectAll("circle")
         .data(worldData.features)
@@ -241,6 +246,7 @@ Promise.all([
                     })
                     .remove();
 
+
                 if(selectedStatesArray.length == 0){
                     document.getElementById("color-bar").style.background = "linear-gradient(to right, #FFFFFF, #08306b)";
                     calculateDegrees();
@@ -292,7 +298,7 @@ function calculateDegrees() {
     //normalizza i gradi di collegamento 
     
 
-    const maxValue = Math.max(...Object.values(selectedTimeDegrees));
+    let maxValue = Math.max(...Object.values(selectedTimeDegrees));
 
     // Crea una scala sequenziale logaritmica
     const colorScale = d3.scaleSequentialLog()
@@ -346,4 +352,25 @@ function calculateMaxAbsoluteDegree(){
         }
     }
     return maxDegree;
+}
+
+function calculateMaxPassengersAndFlights() {
+    let selectedYear = document.getElementById("yearSlider").value;
+    let selectedMonth = document.getElementById("monthSlider").value;
+
+    let filteredRoutes = routes.filter(route => 
+        route.year == selectedYear && 
+        route.month == selectedMonth
+    );
+
+    let maxPassengersTemp = d3.max(filteredRoutes, d => d.passengers);
+    let minPassengersTemp = d3.min(filteredRoutes, d => d.passengers);
+
+    let maxFlightsTemp = d3.max(filteredRoutes, d => d.flights);
+    let minFlightsTemp = d3.min(filteredRoutes, d => d.flights);
+
+    maxFlights = maxFlightsTemp;
+    minFlights = minFlightsTemp;
+    maxPassengers = maxPassengersTemp;
+    minPassengers = minPassengersTemp;
 }
