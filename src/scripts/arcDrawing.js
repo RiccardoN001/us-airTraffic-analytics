@@ -1,41 +1,4 @@
-let availableColors = [
-    "#6B8E23", // Olive Green
-    "#4682B4", // Steel Blue
-    "#D2B48C", // Tan
-    "#708090", // Slate Gray
-    "#8FBC8F", // Dark Sea Green
-    "#B0C4DE", // Light Steel Blue
-    "#A0522D", // Sienna
-    "#C0C0C0"  // Silver
-  ];
-  
-let usedColors = [];
-  
-function assignColor() {
-    if (availableColors.length > 0) {
-        const color = availableColors.pop(); // Prendi un colore disponibile
-        usedColors.push(color); // Sposta il colore nella lista dei colori usati
-        return color;
-}
-
-// Fallback: se i colori sono esauriti, ritorna un colore di default
-console.warn("No more colors available!");
-return "#000000"; // Nero come fallback
-}
-  
-
-function releaseColor(color) {
-    const index = usedColors.indexOf(color);
-    if (index > -1) {
-        usedColors.splice(index, 1); // Rimuovi il colore dai colori usati
-        availableColors.push(color); // Aggiungilo ai colori disponibili
-    }
-}
-  
-  
-
-
-// Funzione per calcolare il bounding box del pezzo più grande
+// funzione per calcolare il bounding box del pezzo più grande
 function getLargestPolygonBounds(feature) {
     if (feature.geometry.type === "Polygon") {
         return d3.geoBounds(feature);
@@ -59,52 +22,40 @@ function getLargestPolygonBounds(feature) {
             }
         });
     }
-
     return largestBounds;
 }
 
-// Funzione per calcolare un punto interno personalizzato
+// funzione per calcolare un punto interno personalizzato
 function getCustomPoint(feature) {
     const bounds = getLargestPolygonBounds(feature);
     return [
-        (bounds[0][0] + bounds[1][0]) / 2,  // Media tra min e max long
-        (bounds[0][1] + bounds[1][1]) / 2   // Media tra min e max lat
+        (bounds[0][0] + bounds[1][0]) / 2,  // media tra min e max long
+        (bounds[0][1] + bounds[1][1]) / 2   // media tra min e max lat
     ];
 }
 
-// Funzione aggiornata per calcolare centroidi validi
+// funzione aggiornata per calcolare centroidi validi
 function getValidCentroid(feature) {
     let centroid = d3.geoCentroid(feature);
 
-    // Controlla se il centroide è dentro lo stato
+    // controlla se il centroide è dentro lo stato
     if (d3.geoContains(feature, centroid)) {
         return centroid;
     }
 
-    // Controlla se lo stato è problematico
+    // controlla se lo stato è problematico
     if (problematicStates.has(feature.properties.name)) {
         //console.warn(`Centroide fuori stato per ${feature.properties.name}, uso punto personalizzato...`);
         return getCustomPoint(feature);
     }
 
-    // Centroide non trovato
+    // centroide non trovato
     //console.warn(`Centroide fuori stato per ${feature.properties.name}`, centroid);
     return centroid;
 }
 
-//GRAFIC FUNCTIONS FOR ARCS
 function drawArc(source, target, color = "black", route) {
     
-    // Controlla se gli stati sono nel dataset corretto
-    /*const sourceCoords = source.properties.NAME 
-        ? projection(getValidCentroid(source)) // Se è uno stato US
-        : projection(getValidCentroid(source));
-
-    const targetCoords = target.properties.name 
-        ? projection(getValidCentroid(target)) // Se è uno stato estero
-        : projection(getValidCentroid(target));
-    */
-
     const currentTransform = d3.zoomTransform(svg.node());
     const sourceCoords = projection(getValidCentroid(source));
     const targetCoords = projection(getValidCentroid(target));
@@ -124,7 +75,7 @@ function drawArc(source, target, color = "black", route) {
         .on("mouseover", function(event, d) {
             d3.select(this)
                 .attr("stroke-width", 3)
-                .attr("stroke", "red") // Cambia colore al passaggio del mouse
+                .attr("stroke", "red") 
                 .attr("opacity", 1)
                 .raise();
             showTooltip(getTooltip(), event, `US State: <strong>${source.properties.NAME}</strong>
@@ -139,24 +90,22 @@ function drawArc(source, target, color = "black", route) {
             d3.select(this)
                 .attr("stroke-width", 1.5)
                 .attr("opacity", 0.9)
-                .attr("stroke", color); // Ripristina il colore originale
+                .attr("stroke", color); 
             hideTooltip(getTooltip());
         });
 }
 
 function drawConnections() {
-    // Pulisce gli archi esistenti per evitare duplicati
+    // pulisce gli archi esistenti per evitare duplicati
     svg.selectAll("[class^='arc-']").remove();
 
-    // Itera su tutti gli stati selezionati
     selectedStatesArray.forEach((selectedState) => {
         selectedState.attr("fill", "#4682B4");
 
-        // Recupera anno e mese selezionati
         const selectedYear = document.getElementById("yearSlider").value;
         const selectedMonth = document.getElementById("monthSlider").value;
 
-        // Trova la sorgente nello stato selezionato
+        
         const source = usaData.features.find(
             (d) => d.properties.NAME === selectedState.data()[0].properties.NAME
         );
@@ -166,9 +115,6 @@ function drawConnections() {
             return;
         }
 
-        const arcColor = assignColor();
-
-        // Filtra le rotte per anno, mese e stato sorgente
         const degree = routes.filter(
             (route) =>
                 route.year == selectedYear &&
@@ -199,7 +145,6 @@ function drawConnections() {
             d3.select("#lower-container").style("display", "none");
         }
 
-        // Disegna gli archi per ogni rotta collegata
         degree.forEach((route) => {
             const target = worldData.features.find(
                 (d) => d.properties.name === route.FG_state
@@ -211,6 +156,7 @@ function drawConnections() {
             }
 
             let arcColor;
+
             if (valueField === "static") {
                 arcColor = "#000000";
             } else {
@@ -220,7 +166,7 @@ function drawConnections() {
 
             drawArc(source, target, arcColor, route);
 
-            // Contrassegna lo stato estero
+            // contrassegna lo stato estero
             svg.selectAll("path")
                 .filter((d) => d && d.properties && d.properties.name === route.FG_state)
                 .attr("fill", "#4682B4");
@@ -228,18 +174,12 @@ function drawConnections() {
     });
 }
 
-
-function reRaiseArcs() {
-    svg.selectAll("[class^='arc-']").raise();
-}
-
 function updateForeignStateColors() {
-    // Resetta il colore di tutti gli stati esteri
+    // resetta il colore di tutti gli stati esteri
     svg.selectAll("path")
         .filter(d => d && d.properties && d.properties.name)
         .attr("fill", "#b2cddf");
 
-    // Itera su tutte le connessioni attive
     selectedStatesArray.forEach((selectedState) => {
         const source = usaData.features.find(
             d => d.properties.NAME === selectedState.data()[0].properties.NAME
@@ -262,7 +202,7 @@ function updateForeignStateColors() {
             if (target) {
                 svg.selectAll("path")
                     .filter(d => d && d.properties && d.properties.name === route.FG_state)
-                    .attr("fill", "#4682B4"); // Colore di connessione attiva
+                    .attr("fill", "#4682B4");
             }
         });
     });
