@@ -1,4 +1,3 @@
-// Ottieni larghezza e altezza del contenitore
 let width = document.querySelector(".responsive-svg-container").clientWidth;
 let height = document.querySelector(".responsive-svg-container").clientHeight;
 
@@ -9,29 +8,28 @@ const svg = d3
     .style("border", "1px solid black");
 
 svg.append("defs")
-.append("clipPath")
-.attr("id", "clip")
-.append("rect")
-.attr("x", 0)
-.attr("y", 0)
-.attr("width", width)
-.attr("height", height);
+    .append("clipPath")
+    .attr("id", "clip")
+    .append("rect")
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("width", width)
+    .attr("height", height);
 
 
-// Definisci la proiezione centrata sull'America
+// proiezione centrata sull'america
 let projection = d3.geoMercator()
     .scale(width / 6)
-    .translate([width / 2, height / 2 + 120]) // Trasla la mappa al centro del contenitore e leggermente verso l'alto
-    .rotate([100, 0]); // Ruota di 100 gradi longitudine verso est
+    .translate([width / 2, height / 2 + 120])
+    .rotate([100, 0]);
 
-// Crea un path generator
 const path = d3.geoPath().projection(projection);
 
 const zoom = d3.zoom()
-    .scaleExtent([1, 8]) // Limita il livello di zoom
+    .scaleExtent([1, 8]) // definisci limiti
     .translateExtent([
-        [-width /42.5 , -height / 3],  // Estendi i limiti a sinistra e sopra
-        [width + width / 42.5, height + height / 2]  // Estendi i limiti a destra e sotto
+        [-width /42.5 , -height / 3],
+        [width + width / 42.5, height + height / 2]
     ])
     .on("zoom", (event) => {
         svg.selectAll("path").attr("transform", event.transform);
@@ -41,17 +39,15 @@ const zoom = d3.zoom()
 
 svg.call(zoom);
 
-    
 
-// Stati problematici
-//stati eliminati dalla lista: Vietnam, Norway, Philippines, Japan
+//stati eliminati dalla lista dei problematici: Vietnam, Norway, Philippines, Japan
 const problematicStates = new Set([
     "The Bahamas", "Fiji", "France", "Haiti",
     "Indonesia", "Israel", "Malaysia",
      "Solomon Islands", "Croatia"
 ]);
 
-//crea un dizionario in cui associa ogni continente ad un colore
+
 const colorContinent = {
     "Africa": "rgb(228, 186, 15)",
     "Asia": "rgb(35, 192, 14)",
@@ -67,8 +63,6 @@ function getTooltip(){
     return tooltip;
 }
 
-/////////////////////////////////////////////CHOROPLETH MAP//////////////////////////////////////////////////////////////
-// Carica i dati GeoJSON per la mappa del mondo
 
 let worldData = null;
 let usaData = null;
@@ -80,14 +74,6 @@ let maxPassengers = 0;
 let minPassengers = 0;
 let maxFlights = 0;
 let minFlights = 0;
-
-/*
-let absoluteMaxPassengers = null;
-let absoluteMinPassengers = null;
-let absoluteMaxFlights = null;
-let absoluteMinFlights = null;
-let absoluteMaxConnections = null;*/
-
 
 function getSelectedStatesArray(){
     return selectedStatesArray;
@@ -110,26 +96,10 @@ Promise.all([
     usaData = usa;
     states = reportData.nodes;
     routes = reportData.edges;
-    
 
-    /*Possibile idea di calcolare il grado massimo di collegamenti assoluto
-    absoluteMaxPassengers = d3.max(routes, d => d.passengers);
-    absoluteMinPassengers = d3.min(routes, d => d.passengers);
-    absoluteMaxFlights = d3.max(routes, d => d.flights);
-    absoluteMinFlights = d3.min(routes, d => d.flights);
-    absoluteMaxConnections = calculateMaxAbsoluteDegree();
-
-    console.log("Max passengers:", absoluteMaxPassengers);
-    console.log("Min passengers:", absoluteMinPassengers);
-    console.log("Max flights:", absoluteMaxFlights);
-    console.log("Min flights:", absoluteMinFlights);
-    console.log("Max connections:", absoluteMaxConnections);
-    */
-
-
-    // Chiama zoomToAmerica dopo aver confermato che usaData è pronto
     zoomToAmerica();
-    // Disegna la mappa
+
+    //disegna la mappa del mondo
     svg.selectAll("path")
         .data(worldData.features)
         .enter()
@@ -139,33 +109,27 @@ Promise.all([
         .attr("stroke", (d) => colorContinent[d.properties.continent] || "black")
         .attr("stroke-width", 0.5)
         .on("mouseover", function(event, d) {
-            let stateMouseOver = d3.select(this);
-
-            const stateName = d.properties.name; // Nome dello stato
+            const stateName = d.properties.name;
             showTooltip(tooltip, event, `<strong>${stateName}</strong>`);  
         })
         .on("mousemove", function(event) {
-            // Mantieni il tooltip aggiornato con la posizione del mouse
             tooltip.style("left", `${event.pageX + 10}px`)
                     .style("top", `${event.pageY + 10}px`);
         })
         .on("mouseout", function(event, d) {
-            let stateMouseOut = d3.select(this);
             hideTooltip(tooltip);
         });
-
 
     svg.selectAll("circle")
         .data(worldData.features)
         .enter().append("circle")
         .attr("cx", d => projection(getValidCentroid(d))[0])
         .attr("cy", d => projection(getValidCentroid(d))[1])
-        .attr("r", 0)       //porre uguale a 1 per debug
+        .attr("r", 0)
         .attr("fill", "red");
-        //.attr("fill", d => problematicStates.has(d.properties.name) ? "blue" : "red");
 
-    console.log(usaData.features);
-    // Disegna i confini degli stati US
+
+    // disegna i confini degli stati US
     svg.selectAll(".us-states")
         .data(usaData.features)
         .enter()
@@ -173,23 +137,19 @@ Promise.all([
         .attr("class", "us-states")
         .attr("d", path)
         .attr("fill", (d) => {
-        const stateName = d.properties.NAME; // Nome corretto dallo stato
-        const value = selectedTimeDegrees[stateName]; // Valore associato
-        
-        let fillColor = "white"; // Colore di default
-        
-        if (value !== undefined && value !== null) {
-            fillColor = colorScale(value); // Applica il colore dalla scala
-        }
-        
-        return fillColor;
+            const stateName = d.properties.NAME;
+            const value = selectedTimeDegrees[stateName];
+            let fillColor = "white";
+            if (value !== undefined && value !== null) {
+                fillColor = colorScale(value);
+            }
+            return fillColor;
         })            
         .attr("stroke", "#03396c")
         .attr("stroke-width", 0.5)
         .on("mouseover", function(event, d) {
             let stateMouseOver = d3.select(this);
-
-            const stateName = d.properties.NAME; // Nome dello stato
+            const stateName = d.properties.NAME;
             let degree = selectedTimeDegrees[stateName] == undefined ? 0 : selectedTimeDegrees[stateName];
             showTooltip(tooltip, event, `<strong>${stateName}</strong><br>Degree: ${degree}`);
 
@@ -203,49 +163,41 @@ Promise.all([
             }
         })
         .on("mousemove", function(event) {
-        // Mantieni il tooltip aggiornato con la posizione del mouse
-        tooltip.style("left", `${event.pageX + 10}px`)
-                .style("top", `${event.pageY + 10}px`);
+            tooltip.style("left", `${event.pageX + 10}px`)
+                    .style("top", `${event.pageY + 10}px`);
         })
         .on("mouseout", function(event, d) {
-        let stateMouseOut = d3.select(this);
-        hideTooltip(tooltip);
-        
-        if(!selectedStatesArray.some(state => state.node() === stateMouseOut.node()) && selectedStatesArray.length != 0){
-            stateMouseOut.attr("fill", "#b3cde0"); // ripristina colore originale
-        }
-        else{
-            //ripristina stroke-width di default
-            stateMouseOut.attr("stroke-width", 0.5);
-        }
+            let stateMouseOut = d3.select(this);
+            hideTooltip(tooltip);
+            
+            if(!selectedStatesArray.some(state => state.node() === stateMouseOut.node()) && selectedStatesArray.length != 0){
+                stateMouseOut.attr("fill", "#b3cde0");
+            }
+            else{
+                stateMouseOut.attr("stroke-width", 0.5);
+            }
         })
         .on("click", function(event, d) {
-            // Seleziona lo stato cliccato
             const selectedState = d3.select(this);
 
             if(selectedStatesArray.length == 0){
-                //disattiva chropleth map
                 svg.selectAll(".us-states").attr("fill", "#b3cde0");
                 document.getElementById("color-bar").style.background = "linear-gradient(to right, #fcbaa1, #67000d)";
                 zoomOutWorld();
             }
 
             if(selectedStatesArray.some(state => state.node() === selectedState.node())){
-                // Rimuovi lo stato dall'array
                 selectedStatesArray = selectedStatesArray.filter(state => state.node() !== selectedState.node());
 
-                // Ripristina il colore originale
                 selectedState.attr("fill", "#b3cde0");
                 selectedState.attr("stroke-width", 0.5);
 
-                // Rimuovi gli archi associati allo stato e ripristina i colori
                 svg.selectAll(`.arc-${d.properties.NAME.replace(/\s+/g, '-')}`)
                     .each(function() {
                         const color = d3.select(this).attr("stroke");
                         releaseColor(color);
                     })
                     .remove();
-
 
                 if(selectedStatesArray.length == 0){
                     document.getElementById("color-bar").style.background = "linear-gradient(to right, #FFFFFF, #08306b)";
@@ -258,23 +210,21 @@ Promise.all([
                 drawConnections(); 
             }            
             updateForeignStateColors();
-            });
+        });
             
-            svg.selectAll(".us-nodes")
-                .data(usaData.features)
-                .enter()
-                .append("circle")
-                .attr("class", "us-nodes")
-                .attr("cx", d => projection(getValidCentroid(d))[0])
-                .attr("cy", d => projection(getValidCentroid(d))[1])
-                .attr("r", 0);    //porre uguale a 1 per debug
-                //.attr("fill", d => problematicStates.has(d.properties.name) ? "blue" : "red");
-        })
+        svg.selectAll(".us-nodes")
+            .data(usaData.features)
+            .enter()
+            .append("circle")
+            .attr("class", "us-nodes")
+            .attr("cx", d => projection(getValidCentroid(d))[0])
+            .attr("cy", d => projection(getValidCentroid(d))[1])
+            .attr("r", 0);
+    })
     .catch((error) =>
         console.error("Errore nel caricamento dei dati del mondo:", error)
     );
 
-//Creazione dizionario con i gradi di collegamenti
 function calculateDegrees() {
     let selectedYear = document.getElementById("yearSlider").value;
     let selectedMonth = document.getElementById("monthSlider").value;
@@ -285,7 +235,7 @@ function calculateDegrees() {
     degree = routes.filter((route) => route.year == selectedYear && route.month == selectedMonth);
 
     degree = degree.reduce((acc, { US_state, FG_state }) => {
-        // Aggiunge lo stato collegato al set associato allo stato americano
+        // aggiunge lo stato collegato al set associato allo stato americano
         acc[US_state] = acc[US_state] || new Set();
         acc[US_state].add(FG_state);
         return acc;
@@ -295,28 +245,25 @@ function calculateDegrees() {
         Object.entries(degree).map(([state, degree]) => [state, degree.size])
     );
 
-    //normalizza i gradi di collegamento 
-    
-
+    //normalizza i gradi di collegamento
     let maxValue = Math.max(...Object.values(selectedTimeDegrees));
 
-    // Crea una scala sequenziale logaritmica
+    //scala sequenziale logaritmica
     const colorScale = d3.scaleSequentialLog()
-        .domain([1, maxValue]) // Dominio logaritmico
-        .interpolator(d3.interpolateBlues); // Gamma dei colori (iniziale e finale)
-        //.range(["#FFFFFF", "#08306b"]); // Gamma dei colori (iniziale e finale)
+        .domain([1, maxValue])
+        .interpolator(d3.interpolateBlues);
     updateColorBar(0, Math.max(...Object.values(selectedTimeDegrees)), d3.scaleLog().domain([0, maxValue]).range(["#FFFFFF, #08306b"]));
 
 
     svg.selectAll(".us-states")
         .attr("fill", (d) => {
-            const stateName = d.properties.NAME; // Nome corretto dallo stato
-            const value = selectedTimeDegrees[stateName]; // Valore associato
+            const stateName = d.properties.NAME;
+            const value = selectedTimeDegrees[stateName];
         
-            let fillColor = "white"; // Colore di default
+            let fillColor = "white";
         
             if (value != undefined && value != null) {
-                fillColor = colorScale(value); // Applica il colore dalla scala
+                fillColor = colorScale(value);
             }
         
             return fillColor;
@@ -335,7 +282,7 @@ function calculateMaxAbsoluteDegree(){
         for(let j = 1; j < 13; j++){
             let degree = routes.filter((route) => route.year == i && route.month == j);
             degree = degree.reduce((acc, { US_state, FG_state }) => {
-                // Aggiunge lo stato collegato al set associato allo stato americano
+                // aggiunge lo stato collegato al set associato allo stato americano
                 acc[US_state] = acc[US_state] || new Set();
                 acc[US_state].add(FG_state);
                 return acc;

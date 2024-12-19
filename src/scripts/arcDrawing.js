@@ -131,6 +131,10 @@ function drawArc(source, target, color = "black", route) {
                 <br>Foreign State: <strong>${target.properties.name}</strong>
                     <br>Number of Passengers: ${route["passengers"]}<br>Number of Flights: ${route["flights"]}`);
         })
+        .on("mousemove", function(event) {
+            tooltip.style("left", `${event.pageX + 10}px`)
+                    .style("top", `${event.pageY + 10}px`);
+        })
         .on("mouseout", function(event, d) {
             d3.select(this)
                 .attr("stroke-width", 1.5)
