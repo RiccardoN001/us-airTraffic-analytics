@@ -31,9 +31,9 @@ span {
     justify-content: center; /* Centra i radio button */
     align-items: center;
     padding: 0 10px; /* Aggiunge un po' di padding ai lati */
-  }
+}
   
-  .radio-container {
+.radio-container {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap; /* Permette di andare a capo */
@@ -41,9 +41,9 @@ span {
     align-items: center;
     width: 100%;
     gap: 5px; /* Spazio tra i radio button */
-  }
+}
   
-  .radio-container label {
+.radio-container label {
     padding: 0.3em 0.8em; /* Riduce il padding delle etichette */
     margin: 0;
     border: 1px solid #ccc;
@@ -53,21 +53,18 @@ span {
     text-align: center;
     transition: background-color 0.3s, color 0.3s;
     font-size: 14px; /* Riduci il font se necessario */
-  }
+}
   
-  .radio-container label:hover {
+.radio-container label:hover {
     background-color: #f0f0f0;
-  }
+}
   
-  .radio-container input[type="radio"] {
+.radio-container input[type="radio"] {
     display: none; /* Nasconde il radio nativo */
-  }
+}
   
-  .radio-container input[type="radio"]:checked + label {
+.radio-container input[type="radio"]:checked + label {
     background-color: #0043ed;
     color: #fff;
     border-color: #0043ed;
-  }
-  
-  
-  
+}

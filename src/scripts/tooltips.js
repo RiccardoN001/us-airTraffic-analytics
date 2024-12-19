@@ -1,5 +1,4 @@
 function createTooltip() {
-    // Crea l'elemento del tooltip
     const tooltip = d3.select("body")
         .append("div")
         .attr("id", "tooltip")
@@ -9,20 +8,17 @@ function createTooltip() {
         .style("padding", "5px 10px")
         .style("border-radius", "5px")
         .style("pointer-events", "none")
-        .style("opacity", 0); // Nascondi inizialmente il tooltip
-
+        .style("opacity", 0);
     return tooltip;
 }
 
 function showTooltip(tooltip, event, content) {
-    // Aggiorna il contenuto e la posizione del tooltip
     tooltip.html(content)
         .style("left", `${event.pageX + 10}px`)
         .style("top", `${event.pageY + 10}px`)
-        .style("opacity", 1); // Mostra il tooltip
+        .style("opacity", 1);
 }
 
 function hideTooltip(tooltip) {
-    // Nascondi il tooltip
     tooltip.style("opacity", 0);
 }
