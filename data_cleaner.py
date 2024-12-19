@@ -38,6 +38,7 @@ passengers = passengers.rename(columns={'usg_apt_id': 'US_Airport_id','usg_apt':
 #L'inner join è usato per mantenere solo le righe che hanno corrispondenze in entrambi i dataset
 data = pd.merge(departures, passengers, on=['Year', 'Month', 'US_Airport', 'FG_Airport', 'Airline'], how='inner')
 
+print(data.head())
 
 #Quantifica la differenza tra i dataset iniziali e quello finale (significa che ci sono delle righe che non hanno corrispondenze)
 print('La differenza tra i dataset iniziali e quello finale è di',  len(passengers) - len(data), 'righe')
@@ -62,21 +63,26 @@ data = pd.merge(data, iata_codes, left_on='FG_Airport', right_on='iata_code', ho
 data = data.rename(columns={'Country_Name': 'FG_State', 'Country_Code': 'FG_State_id', 'Continent': 'FG_Continent'})
 data = data.drop(columns=['iata_code'], axis=1)
 
+print(data.head())
+
 
 #Riordino le colonne nell'ordine che preferisco
 column_order = [
     'Year', 'Month', 'US_Airport', 'US_State', 'US_State_id', 'US_Continent', 
-    'FG_Airport', 'FG_State', 'FG_State_id', 'FG_Continent', 'Flights', 'Passengers'
+    'FG_Airport', 'FG_State', 'FG_State_id', 'FG_Continent', 'Flights', 'Passengers', 'Airline'
 ]
 data = data[column_order]
 
+print(data.head())
 
 #Ora voglio fare in modo che le tratte rispetto agli aeroporti siano uniche, quindi raggruppo per compagnia aerea sommando i voli e i passeggeri per poi cancellare la colonna Airline
-data = data.drop(columns=['US_Airport', 'FG_Airport'])
+data = data.drop(columns=['US_Airport', 'FG_Airport', 'Airline'])
 data = data.groupby(['Year','Month', 'US_State' ,'US_State_id', 'US_Continent', 'FG_State', 'FG_State_id', 'FG_Continent'], as_index=False).agg({
     'Passengers': 'sum',
     'Flights': 'sum'
 })
+
+print(data.head())
 
 
 #drop dei campioni che hanno meno di un tot di passeggeri o voli
@@ -117,7 +123,7 @@ print(data.head())
 print(f"Numero di campioni nel DataFrame filtrato: {len(data)}")
 
 #Salva il dataset finale in un file csv
-data.to_csv('dataset/International_Report.csv', index=False)
+#data.to_csv('dataset/International_Report.csv', index=False)
 
 
 ###############################################################  JSON  ###############################################################
@@ -168,6 +174,6 @@ dataset = {
 
 print(len(dataset['nodes']), len(dataset['edges']))
 
-with open('dataset/International_Report.json', 'w') as f:
-  json.dump(dataset, f, indent=3)
+#with open('dataset/International_Report.json', 'w') as f:
+ # json.dump(dataset, f, indent=3)
 
