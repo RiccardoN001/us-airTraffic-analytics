@@ -118,13 +118,14 @@ function drawArc(source, target, color = "black", route) {
         .attr("transform", currentTransform)
         .attr("fill", "none")
         .attr("stroke", color)
-        .attr("opacity", 0.7)
+        .attr("opacity", 0.9)
         .attr("stroke-width", 1.5)
         .attr("class", `arc-${source.properties.NAME.replace(/\s+/g, '-')}`)
         .on("mouseover", function(event, d) {
             d3.select(this)
                 .attr("stroke-width", 3)
                 .attr("stroke", "red") // Cambia colore al passaggio del mouse
+                .attr("opacity", 1)
                 .raise();
             showTooltip(getTooltip(), event, `US State: <strong>${source.properties.NAME}</strong>
                 <br>Foreign State: <strong>${target.properties.name}</strong>
@@ -133,6 +134,7 @@ function drawArc(source, target, color = "black", route) {
         .on("mouseout", function(event, d) {
             d3.select(this)
                 .attr("stroke-width", 1.5)
+                .attr("opacity", 0.9)
                 .attr("stroke", color); // Ripristina il colore originale
             hideTooltip(getTooltip());
         });
