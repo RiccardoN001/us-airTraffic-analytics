@@ -26,12 +26,12 @@ print('Il dataset passengers ha', len(passengers[passengers.duplicated()]), 'dup
 #Charter e Total sono rimossi perché analizzeremo solo i voli di linea programmati
 #usg_wac e fg_wac sono codici IATA delle zone mondiali, ma le implemento con i codici IATA degli aeroporti
 #airlineid è un dato ridondante con carrier poiché Carrirer è un identificativo univoco per ogni compagnia aerea
-departures = departures.drop(columns=['data_dte', 'usg_apt_id', 'fg_apt_id', 'type', 'carriergroup', 'Scheduled', 'Charter', 'usg_wac', 'fg_wac', 'airlineid'], axis=1)
-passengers = passengers.drop(columns=['data_dte', 'usg_apt_id', 'fg_apt_id', 'type', 'carriergroup', 'Scheduled', 'Charter', 'usg_wac', 'fg_wac', 'airlineid'], axis=1)
+departures = departures.drop(columns=['data_dte', 'usg_apt_id', 'fg_apt_id', 'type', 'carriergroup', 'Total', 'Charter', 'usg_wac', 'fg_wac', 'airlineid'], axis=1)
+passengers = passengers.drop(columns=['data_dte', 'usg_apt_id', 'fg_apt_id', 'type', 'carriergroup', 'Total', 'Charter', 'usg_wac', 'fg_wac', 'airlineid'], axis=1)
 
 # Rinomino le colonne per una migliore comprensione
-departures = departures.rename(columns={'usg_apt_id': 'US_Airport_id','usg_apt': 'US_Airport','fg_apt_id': 'FG_Airport_id', 'fg_apt': 'FG_Airport', 'carrier': 'Airline', 'Total': 'Flights'})
-passengers = passengers.rename(columns={'usg_apt_id': 'US_Airport_id','usg_apt': 'US_Airport','fg_apt_id': 'FG_Airport_id', 'fg_apt': 'FG_Airport', 'carrier': 'Airline', 'Total': 'Passengers'})
+departures = departures.rename(columns={'usg_apt_id': 'US_Airport_id','usg_apt': 'US_Airport','fg_apt_id': 'FG_Airport_id', 'fg_apt': 'FG_Airport', 'carrier': 'Airline', 'Scheduled': 'Flights'})
+passengers = passengers.rename(columns={'usg_apt_id': 'US_Airport_id','usg_apt': 'US_Airport','fg_apt_id': 'FG_Airport_id', 'fg_apt': 'FG_Airport', 'carrier': 'Airline', 'Scheduled': 'Passengers'})
 
 
 # Unisce i due dataset in un unico dataset usando come chiave di join le colonne comuni (se non ci sono corrispondenze, non vengono inserite righe)
@@ -98,6 +98,23 @@ print(data.head())
 print('Il dataset finale ha', len(data), 'campioni')
 
 print(data.isnull().sum())
+
+
+states_to_remove = [
+    "Antigua and Barbuda", "Aruba", "Barbados", "Bermuda", "Cape Verde",
+    "Cayman Islands", "Cook Islands", "French Polynesia", "Gibraltar",
+    "Grenada", "Guadeloupe", "Hong Kong", "Kiribati", "Macau",
+    "Marshall Islands", "Martinique", "Netherlands Antilles",
+    "Saint Helena", "Saint Kitts and Nevis", "Saint Lucia",
+    "Saint Vincent and the Grenadines", "Samoa", "Singapore",
+    "Turks and Caicos Islands"
+]
+
+data = data[~data['FG_State'].isin(states_to_remove)]
+
+print(data.head())
+# Stampa il numero di campioni nel DataFrame filtrato
+print(f"Numero di campioni nel DataFrame filtrato: {len(data)}")
 
 #Salva il dataset finale in un file csv
 data.to_csv('dataset/International_Report.csv', index=False)

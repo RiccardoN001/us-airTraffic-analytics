@@ -6210,7 +6210,7 @@
             "type": "Feature",
             "properties": {
                 "name": "Bahamas",
-                "continent": "Unknown"
+                "continent": "North America"
             },
             "geometry": {
                 "type": "MultiPolygon",
@@ -38384,7 +38384,7 @@
         {
             "type": "Feature",
             "properties": {
-                "name": "Republic of Serbia",
+                "name": "Serbia",
                 "continent": "Europe"
             },
             "geometry": {
