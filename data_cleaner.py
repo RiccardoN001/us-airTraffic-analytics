@@ -29,12 +29,26 @@ passengers = passengers.drop(columns=['data_dte', 'usg_apt_id', 'fg_apt_id', 'ty
 departures = departures.rename(columns={'usg_apt': 'US_Airport_IATA', 'fg_apt': 'FG_Airport_IATA', 'Scheduled': 'Flights'})
 passengers = passengers.rename(columns={'usg_apt': 'US_Airport_IATA', 'fg_apt': 'FG_Airport_IATA', 'Scheduled': 'Passengers'})
 
+#raggruppo le tuple con stessi attributi 'Year', 'Month', 'US_Airport_IATA', 'FG_Airport_IATA'
+# (in seguito all'eliminazione fatta degli attributi relativi alle compagnie aeree): 
+departures = departures.groupby(['Year', 'Month', 'US_Airport_IATA', 'FG_Airport_IATA'], as_index=False).agg({
+    'Flights': 'sum',
+})
+
+passengers = passengers.groupby(['Year', 'Month', 'US_Airport_IATA', 'FG_Airport_IATA'], as_index=False).agg({
+    'Passengers': 'sum',
+})
+
 
 # Unisce i due dataset in un unico dataset usando come chiave di join le colonne in comune tra i due dataset
 # inner join è usato per mantenere solo le righe che hanno corrispondenze in entrambi i dataset
 data = pd.merge(departures, passengers, on=['Year', 'Month', 'US_Airport_IATA', 'FG_Airport_IATA'], how='inner')
 
+
 #Quantifica la differenza tra i dataset iniziali e quello finale (significa che ci sono delle righe che non hanno corrispondenze)
+print(len(data))
+print(len(passengers))
+print(len(departures))
 print('La differenza tra i dataset iniziali e quello finale è di',  len(passengers) - len(data), 'righe')
 
 
