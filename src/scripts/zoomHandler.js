@@ -1,11 +1,11 @@
 function zoomToAmerica() {
  
-    // Escludi Alaska e Hawaii
+    // escludi Alaska e Hawaii
     const mainlandUSFeatures = usaData.features.filter(
         d => !["Alaska", "Hawaii"].includes(d.properties.NAME)
     );
 
-    // Calcola i limiti geografici
+    // calcola i limiti geografici
     const pathGenerator = d3.geoPath().projection(projection);
     const usBounds = pathGenerator.bounds({
         type: "FeatureCollection",
@@ -16,16 +16,16 @@ function zoomToAmerica() {
     const offsetX = 100;  
     const offsetY = 75;  
 
-    // Calcola centro e scala
+    // calcola centro e scala
     const dx = x1 - x0;
     const dy = y1 - y0;
-    const scale = Math.min(width / dx, height / dy) * 0.55;  // Scala ridotta
+    const scale = Math.min(width / dx, height / dy) * 0.55;  // scala ridotta
     const translate = [
         width / 2 - scale * (x0 + x1) / 2 + offsetX,
         height / 2 - scale * (y0 + y1) / 2 + offsetY
     ];
 
-    // Applica lo zoom
+    // applica lo zoom
     svg.transition()
         .duration(1000)
         .call(
@@ -37,19 +37,19 @@ function zoomToAmerica() {
 }
 
 function zoomOutWorld() {
-    // Definisci i bounds per la vista globale
+    // definisco i bounds
     const x0 = 0;
     const y0 = 0;
     const x1 = width;
     const y1 = height;
 
-    // Calcola scala e traslazione per lo zoom out
+    // calcola scala e traslazione per lo zoom out
     const dx = x1 - x0;
     const dy = y1 - y0;
     const scale = Math.min(width / dx, height / dy);
     const translate = [width / 2 - scale * (x0 + x1) / 2, height / 2 - scale * (y0 + y1) / 2];
 
-    // Applica la trasformazione per lo zoom out
+    // applica zoom out
     svg.transition()
         .duration(1000)
         .call(
