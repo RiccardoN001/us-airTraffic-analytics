@@ -113,23 +113,37 @@ d3.json("../../dataset/International_Report.json").then(function(jsonData) {
         // Aggiungi i listener agli slider
         document.getElementById("yearSlider").addEventListener("input", (e) => {
             console.log(`Anno selezionato: ${e.target.value}`);
+            const yearValue = parseInt(e.target.value);
+
+            // Se l'anno è il 2020 e il mese selezionato è maggiore di marzo, torna a marzo
+            if (yearValue === 2020 && parseInt(document.getElementById("monthSlider").value) > 3) {
+                document.getElementById("monthSlider").value = 3;
+            }
             updateSliderLabels();
 
             if (selectedStatesArray.length == 0) {
                 calculateDegrees();
             } else {
                 drawConnections();
+                updateForeignStateColors();
             }
         });
 
         document.getElementById("monthSlider").addEventListener("input", (e) => {
             console.log(`Mese selezionato: ${e.target.value}`);
+            const monthValue = parseInt(e.target.value);
+
+            // Assicurati che il mese non superi marzo se l'anno è il 2020
+            if (parseInt(document.getElementById("yearSlider").value) === 2020 && monthValue > 3) {
+                e.target.value = 3;  // Forza il valore massimo
+            }
             updateSliderLabels();
 
             if (selectedStatesArray.length == 0) {
                 calculateDegrees();
             } else {
                 drawConnections();
+                updateForeignStateColors();
             }
         });
     };
