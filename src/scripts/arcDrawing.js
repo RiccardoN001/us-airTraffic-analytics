@@ -118,12 +118,14 @@ function drawArc(source, target, color = "black", route) {
         .attr("transform", currentTransform)
         .attr("fill", "none")
         .attr("stroke", color)
+        .attr("opacity", 0.7)
         .attr("stroke-width", 1.5)
         .attr("class", `arc-${source.properties.NAME.replace(/\s+/g, '-')}`)
         .on("mouseover", function(event, d) {
             d3.select(this)
                 .attr("stroke-width", 3)
-                .attr("stroke", "red"); // Cambia colore al passaggio del mouse
+                .attr("stroke", "red") // Cambia colore al passaggio del mouse
+                .raise();
             showTooltip(getTooltip(), event, `US State: <strong>${source.properties.NAME}</strong>
                 <br>Foreign State: <strong>${target.properties.name}</strong>
                     <br>Number of Passengers: ${route["passengers"]}<br>Number of Flights: ${route["flights"]}`);
