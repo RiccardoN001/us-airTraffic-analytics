@@ -174,6 +174,10 @@ function drawConnections() {
     });
 }
 
+function reRaiseArcs() {
+    svg.selectAll("[class^='arc-']").raise();
+}
+
 function updateForeignStateColors() {
     // resetta il colore di tutti gli stati esteri
     svg.selectAll("path")
