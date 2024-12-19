@@ -53,12 +53,12 @@ const problematicStates = new Set([
 
 //crea un dizionario in cui associa ogni continente ad un colore
 const colorContinent = {
-    "Africa": "#9c635c",
-    "Asia": "#acae89",
-    "Europe": "#568864",
-    "North America": "#609692",
-    "Oceania": "#78868f",
-    "South America": " #b68534",
+    "Africa": "rgb(228, 186, 15)",
+    "Asia": "rgb(35, 192, 14)",
+    "Europe": "rgb(232, 14, 14)",
+    "North America": "rgb(18, 124, 222)",
+    "Oceania": "rgb(172, 35, 218)",
+    "South America": "rgb(228, 111, 15)",
 };
 
 const tooltip = createTooltip();
