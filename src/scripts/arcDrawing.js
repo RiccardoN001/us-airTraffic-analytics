@@ -178,16 +178,20 @@ function drawConnections() {
         if (selectedArc === "passengers") {
             valueField = "passengers";
             d3.select("#lower-container").style("display", "block");
+            minValue = d3.min(degree, (d) => d.passengers);
+            maxValue = d3.max(degree, (d) => d.passengers);
             colorScale = d3.scaleSequential(t => d3.interpolateReds(t + 0.2))
-                           .domain([absoluteMinPassengers, absoluteMaxPassengers]);
-            updateColorBar(absoluteMinPassengers, absoluteMaxPassengers, d3.scaleLinear().domain([0, 1]).range(["#fcbaa1", "#67000d"]));
+                           .domain([minValue, maxValue]);
+            updateColorBar(minValue, maxValue, d3.scaleLinear().domain([0, 1]).range(["#fcbaa1", "#67000d"]));
         } 
         else if (selectedArc === "flights") {
             valueField = "flights";
             d3.select("#lower-container").style("display", "block");
+            minValue = d3.min(degree, (d) => d.flights);
+            maxValue = d3.max(degree, (d) => d.flights);
             colorScale = d3.scaleSequential(t => d3.interpolateReds(t + 0.2))
-                           .domain([absoluteMinFlights, absoluteMaxFlights]);
-            updateColorBar(absoluteMinFlights, absoluteMaxFlights, d3.scaleLinear().domain([0, 1]).range(["#fcbaa1", "#67000d"]));
+                           .domain([minValue, maxValue]);
+            updateColorBar(minValue, maxValue, d3.scaleLinear().domain([0, 1]).range(["#fcbaa1", "#67000d"]));
         }
         else {
             valueField = "static";

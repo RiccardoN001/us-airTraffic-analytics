@@ -76,11 +76,13 @@ var states = new Array();
 var routes = new Array();
 let selectedStatesArray = new Array();
 let selectedTimeDegrees = {};
+
+/*
 let absoluteMaxPassengers = null;
 let absoluteMinPassengers = null;
 let absoluteMaxFlights = null;
 let absoluteMinFlights = null;
-let absoluteMaxConnections = null;
+let absoluteMaxConnections = null;*/
 
 
 function getSelectedStatesArray(){
@@ -105,6 +107,7 @@ Promise.all([
     states = reportData.nodes;
     routes = reportData.edges;
 
+    /*Possibile idea di calcolare il grado massimo di collegamenti assoluto
     absoluteMaxPassengers = d3.max(routes, d => d.passengers);
     absoluteMinPassengers = d3.min(routes, d => d.passengers);
     absoluteMaxFlights = d3.max(routes, d => d.flights);
@@ -116,6 +119,7 @@ Promise.all([
     console.log("Max flights:", absoluteMaxFlights);
     console.log("Min flights:", absoluteMinFlights);
     console.log("Max connections:", absoluteMaxConnections);
+    */
 
 
     // Chiama zoomToAmerica dopo aver confermato che usaData è pronto
@@ -285,10 +289,17 @@ function calculateDegrees() {
         Object.entries(degree).map(([state, degree]) => [state, degree.size])
     );
 
-    const colorScale = d3.scaleSequential()
-    .domain([0, absoluteMaxConnections]) // Intervallo dati
-    .interpolator(d3.interpolateBlues);
-    updateColorBar(0, absoluteMaxConnections, d3.scaleLinear().domain([0, 1]).range(["#FFFFFF, #08306b"]));
+    //normalizza i gradi di collegamento 
+    
+
+    const maxValue = Math.max(...Object.values(selectedTimeDegrees));
+
+    // Crea una scala sequenziale logaritmica
+    const colorScale = d3.scaleSequentialLog()
+        .domain([1, maxValue]) // Dominio logaritmico
+        .interpolator(d3.interpolateBlues); // Gamma dei colori (iniziale e finale)
+        //.range(["#FFFFFF", "#08306b"]); // Gamma dei colori (iniziale e finale)
+    updateColorBar(0, Math.max(...Object.values(selectedTimeDegrees)), d3.scaleLog().domain([0, maxValue]).range(["#FFFFFF, #08306b"]));
 
 
     svg.selectAll(".us-states")
