@@ -88,16 +88,22 @@ function getValidCentroid(feature) {
     return centroid;
 }
 
-function drawArc(source, target, color = "black", route) {
-    
-    const currentTransform = d3.zoomTransform(svg.node());
-    const sourceCoords = projection(getValidCentroid(source));
-    const targetCoords = projection(getValidCentroid(target));
 
-    svg.append("path")
+
+
+function drawArc(source, target, color = "black", route) {
+    const currentTransform = d3.zoomTransform(svg.node());
+
+    // Calcola le coordinate del segmento
+    const sourceCentroid = getValidCentroid(source);
+    const targetCentroid = getValidCentroid(target);
+    const coordinates = [sourceCentroid, targetCentroid];
+
+    // Definisce il path
+    const path = svg.append("path")
         .datum({
             type: "LineString",
-            coordinates: [getValidCentroid(source), getValidCentroid(target)]
+            coordinates: coordinates
         })
         .attr("d", d3.geoPath().projection(projection))
         .attr("transform", currentTransform)
@@ -114,7 +120,7 @@ function drawArc(source, target, color = "black", route) {
                 .raise();
             showTooltip(getTooltip(), event, `US State: <strong>${source.properties.NAME}</strong>
                 <br>Foreign State: <strong>${target.properties.name}</strong>
-                    <br>Number of Passengers: ${route["passengers"]}<br>Number of Flights: ${route["flights"]}`);
+                <br>Number of Passengers: ${route["passengers"]}<br>Number of Flights: ${route["flights"]}`);
         })
         .on("mousemove", function(event) {
             tooltip.style("left", `${event.pageX + 10}px`)
@@ -127,7 +133,46 @@ function drawArc(source, target, color = "black", route) {
                 .attr("stroke", color); 
             hideTooltip(getTooltip());
         });
+
+    // Corregge l'accesso al nodo path
+    const pathNode = path.node();
+    if (pathNode) {
+        const pathLength = pathNode.getTotalLength();
+
+        // Trova il punto intermedio
+        const midPoint = pathNode.getPointAtLength(pathLength / 2);
+
+        console.log(`Punto medio dell'arco: X=${midPoint.x}, Y=${midPoint.y}`);
+
+        // Verifica se il punto medio è sopra il limite superiore della mappa
+        if (midPoint.y < 0) {
+            console.warn("Il punto medio dell'arco è sopra il limite superiore della mappa.");
+
+            path.attr("stroke", "red");
+
+            svg.append("circle")
+                .attr("cx", midPoint.x)
+                .attr("cy", midPoint.y)
+                .attr("r", 5)
+                .attr("fill", "red")
+                .attr("transform", currentTransform);
+        } else {
+            // Facoltativo: Aggiunge un cerchio blu se non sopra il limite
+            svg.append("circle")
+                .attr("cx", midPoint.x)
+                .attr("cy", midPoint.y)
+                .attr("r", 5)
+                .attr("fill", "blue")
+                .attr("transform", currentTransform);
+        }
+    } else {
+        console.error("Impossibile accedere al nodo path.");
+    }
 }
+
+
+
+
 
 function drawConnections() {
     // pulisce gli archi esistenti per evitare duplicati
