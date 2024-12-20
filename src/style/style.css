@@ -68,3 +68,57 @@ span {
     color: #fff;
     border-color: #0043ed;
 }
+
+#year-slider, #month-slider {
+    /* Colors */
+    --slider-color: blue;
+    --range-color: blue;
+    --slider-active: blue;
+    --range-active: blue;
+    /* Sizes */
+    --slider-wh: 20px;
+    --range-thick: 15px;
+    --bg-thick: 10px;
+    --mini-thick: 4px;
+    --mini-ratio: calc(4/15);
+     /* Layout */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 50%; /* Adatta al contenitore */
+}
+
+.drbar-slider-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%; /* Adatta al contenitore */
+    width: 100%;
+    padding: 10px; /* Margine interno per separare le label */
+}
+
+.drbar-slider-container > div {
+    height: 60%; /* Lo slider occupa solo il 60% dell'altezza totale */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.drbar-slider-container span {
+    font-size: 14px;
+    text-align: center;
+    margin: 5px 0; /* Spazio tra slider e label */
+}
+
+/* Slider */
+.drbar-slider {
+    writing-mode: bt-lr; /* Modalità verticale */
+    transform: rotate(270deg); /* Rotazione per slider verticale */
+    width: 80%; /* Larghezza proporzionata */
+    height: 80;
+}
+
+
+

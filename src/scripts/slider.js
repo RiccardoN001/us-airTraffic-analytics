@@ -10,7 +10,7 @@ const createSliderContainer = () => {
     const containerHeight = mapContainer.clientHeight;
     const containerWidth = mapContainer.clientWidth;
 
-    //Il container viene calcolato in base all'altezza e alla larghezza del contenitore della mappa
+    // Contenitore principale
     const sliderContainer = document.createElement("div");
     sliderContainer.id = "slider-container";
     sliderContainer.style.position = "absolute";
@@ -24,137 +24,101 @@ const createSliderContainer = () => {
     sliderContainer.style.justifyContent = "space-around";
     document.body.appendChild(sliderContainer);
 
-    // Funzione per creare uno slider con due label (sopra e sotto)
-    const createSliderWithLabels = (id, min, max, topLabelText, bottomLabelText) => {
-        const sliderWrapper = document.createElement("div");
-        sliderWrapper.style.display = "flex"; 
-        sliderWrapper.style.flexDirection = "column";
-        sliderWrapper.style.alignItems = "center"; 
-        sliderWrapper.style.width = `${sliderContainer.clientWidth / 2}px`; 
-        sliderWrapper.style.height = `${sliderContainer.clientHeight}px`; 
+    // Funzione per creare un wrapper slider con layout label-sopra-slider-label-sotto
+    const createLabeledSlider = (id, upperLabelText, lowerLabelText, lowerLabelId) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "drbar-slider-container";
+        wrapper.style.display = "flex";
+        wrapper.style.flexDirection = "column";
+        wrapper.style.alignItems = "center";
+        wrapper.style.justifyContent = "space-between";
+        wrapper.style.height = "100%";
+        wrapper.style.width = "100%";
 
         // Label superiore
-        const topLabel = document.createElement("span");
-        topLabel.textContent = topLabelText;
-        topLabel.style.fontSize = "14px";
-        topLabel.style.marginTop = "20px";
+        const upperLabel = document.createElement("span");
+        upperLabel.textContent = upperLabelText;
 
-        //creo un contenitore singolo per ogni slider
-        const singleSliderContainer = document.createElement("div");
-        singleSliderContainer.style.display = "flex";
-        singleSliderContainer.style.flexDirection = "column";
-        singleSliderContainer.style.alignItems = "center";
-        singleSliderContainer.style.justifyContent = "center";
-        singleSliderContainer.style.width = "100%";
-        singleSliderContainer.style.height = "70%";
-
-        // Slider
-        const slider = document.createElement("input");
-        slider.type = "range";
-        slider.min = min;
-        slider.max = max;
-        slider.id = id;
-        slider.style.writingMode = "bt-lr"; // Modalità verticale
-        slider.style.transform = "rotate(270deg)"; // Ruota per verticalità
-        slider.style.width = `${containerHeight * 0.3}px`; // Adatta l'altezza al contenitore
-        slider.style.background = "#ddd";
-        slider.classList.add("vertical-slider");
-
-        singleSliderContainer.appendChild(slider);
+        // Contenitore dello slider
+        const sliderDiv = document.createElement("div");
+        sliderDiv.id = id;
+        sliderDiv.style.height = "60%"; // Limita l'altezza dello slider
+        sliderDiv.style.display = "flex";
+        sliderDiv.style.justifyContent = "center";
+        sliderDiv.style.alignItems = "center";
 
         // Label inferiore
-        const bottomLabel = document.createElement("span");
-        bottomLabel.textContent = bottomLabelText;
-        bottomLabel.style.fontSize = "14px";
-        if (bottomLabelText === "2020") {
-            bottomLabel.id = "yearLabel";
-        } else {
-            bottomLabel.id = "monthLabel";
-        }
+        const lowerLabel = document.createElement("span");
+        lowerLabel.textContent = lowerLabelText;
+        lowerLabel.id = lowerLabelId; // Assegna un ID alla label inferiore
 
-        sliderWrapper.appendChild(topLabel);
-        sliderWrapper.appendChild(singleSliderContainer);
-        sliderWrapper.appendChild(bottomLabel);
+        // Assembla il layout
+        wrapper.appendChild(upperLabel);
+        wrapper.appendChild(sliderDiv);
+        wrapper.appendChild(lowerLabel);
 
-        return sliderWrapper;
+        return { wrapper, sliderDiv };
     };
 
-    // Slider per l'anno
-    const yearSliderWrapper = createSliderWithLabels(
-        "yearSlider",
-        routes[0].year,
-        routes[routes.length - 1].year,
-        "Year",
-        "2020"
+    // Slider per l'anno (1990-2020)
+    const { wrapper: yearWrapper, sliderDiv: yearSliderDiv } = createLabeledSlider(
+        "year-slider",
+        "Year Range",
+        "1990 - 2020",
+        "year-label"
     );
+    sliderContainer.appendChild(yearWrapper);
 
-    // Slider per il mese
-    const monthSliderWrapper = createSliderWithLabels(
-        "monthSlider",
-        1,
-        12,
-        "Month",
-        "Jan"
+    // Slider per il mese (Gen-Dic)
+    const { wrapper: monthWrapper, sliderDiv: monthSliderDiv } = createLabeledSlider(
+        "month-slider",
+        "Month Range",
+        "Jan - Dec",
+        "month-label"
     );
+    
+    sliderContainer.appendChild(monthWrapper);
 
-    sliderContainer.appendChild(yearSliderWrapper);
-    sliderContainer.appendChild(monthSliderWrapper);
-
-    // Imposta il valore iniziale degli slider
-    document.getElementById("yearSlider").value = 2020;
-    document.getElementById("monthSlider").value = 1;
-
-    calculateMaxPassengersAndFlights();
-
-    // Aggiungi i listener agli slider
-    document.getElementById("yearSlider").addEventListener("input", (e) => {
-        console.log(`Anno selezionato: ${e.target.value}`);
-        const yearValue = parseInt(e.target.value);
-
-        // Assicurati che il mese non superi marzo se l'anno è il 2020 (A causa del covid non ci sono voli registrati dopo marzo 2020)
-        if (yearValue === 2020 && parseInt(document.getElementById("monthSlider").value) > 3) {
-            document.getElementById("monthSlider").value = 3;
-        }
-        
-        updateSliderLabels();
-
-        if (selectedStatesArray.length == 0) {
-            calculateDegrees();
-        } else {
-            calculateMaxPassengersAndFlights();
-            drawConnections();
-            updateForeignStateColors();
-        }
+    // Inizializza gli slider DOPO aver aggiunto i div al DOM
+    const yearSlider = new DualVRangeBar("year-slider", {
+        lowerBound: 1990,
+        upperBound: 2020,
+        lower: 1990,
+        upper: 2020,
+        minSpan: 0,
     });
 
-    document.getElementById("monthSlider").addEventListener("input", (e) => {
-        console.log(`Mese selezionato: ${e.target.value}`);
-        const monthValue = parseInt(e.target.value);
-
-        // Assicurati che il mese non superi marzo se l'anno è il 2020 (A causa del covid non ci sono voli registrati dopo marzo 2020)
-        if (parseInt(document.getElementById("yearSlider").value) === 2020 && monthValue > 3) {
-            e.target.value = 3; 
-        }
-        updateSliderLabels();
-
-        if (selectedStatesArray.length == 0) {
-            calculateDegrees();
-        } else {
-            calculateMaxPassengersAndFlights();
-            drawConnections();
-            updateForeignStateColors();
-        }
+    const monthSlider = new DualVRangeBar("month-slider", {
+        lowerBound: 1,
+        upperBound: 12,
+        lower: 1,
+        upper: 12,
+        minSpan: 0,
     });
+
+    
+
+    // Funzione per aggiornare le etichette
+    const updateLabels = () => {
+        // Arrotonda i valori degli slider a interi
+        yearSlider.lower = Math.round(yearSlider.lower);
+        yearSlider.upper = Math.round(yearSlider.upper);
+        monthSlider.lower = Math.round(monthSlider.lower);
+        monthSlider.upper = Math.round(monthSlider.upper);
+
+        // Aggiorna le etichette
+        document.getElementById("year-label").textContent = `${yearSlider.lower} - ${yearSlider.upper}`;
+        document.getElementById("month-label").textContent = `${getMonthName(monthSlider.lower)} - ${getMonthName(monthSlider.upper)}`;
+
+    };
+
+    yearSlider.addEventListener("update", updateLabels);
+    monthSlider.addEventListener("update", updateLabels);
+
+    // Funzione per ottenere il nome del mese
+    function getMonthName(monthNumber) {
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return months[monthNumber - 1];
+    }
 };
 
-// Funzione per aggiornare il valore delle label degli slider
-function updateSliderLabels() {
-    document.getElementById("yearLabel").textContent = document.getElementById("yearSlider").value;
-    document.getElementById("monthLabel").textContent = getMonthName(document.getElementById("monthSlider").value);
-}
-
-// Funzione per ottenere il nome del mese in base al numero
-function getMonthName(monthNumber) {
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return months[monthNumber - 1]; 
-}
