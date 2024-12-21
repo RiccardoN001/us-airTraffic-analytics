@@ -89,89 +89,103 @@ function getValidCentroid(feature) {
 }
 
 
-
-
 function drawArc(source, target, color = "black", route) {
     const currentTransform = d3.zoomTransform(svg.node());
 
-    // Calcola le coordinate del segmento
     const sourceCentroid = getValidCentroid(source);
     const targetCentroid = getValidCentroid(target);
+
+    const projectedSource = projection(sourceCentroid);
+    const projectedTarget = projection(targetCentroid);
+
+    console.log(`Centroidi calcolati: sourceCentroid=${sourceCentroid}, targetCentroid=${targetCentroid}`);
+    console.log(`Centroidi proiettati: projectedSource=${projectedSource}, projectedTarget=${projectedTarget}`);
+
+    let isOutOfBounds = false;
     const coordinates = [sourceCentroid, targetCentroid];
 
-    // Definisce il path
-    const path = svg.append("path")
-        .datum({
-            type: "LineString",
-            coordinates: coordinates
-        })
-        .attr("d", d3.geoPath().projection(projection))
-        .attr("transform", currentTransform)
-        .attr("fill", "none")
-        .attr("stroke", color)
-        .attr("opacity", 0.9)
-        .attr("stroke-width", 1.5)
-        .attr("class", `arc-${source.properties.NAME.replace(/\s+/g, '-')}`)
-        .on("mouseover", function(event, d) {
-            d3.select(this)
-                .attr("stroke-width", 3)
-                .attr("stroke", "red") 
-                .attr("opacity", 1)
-                .raise();
-            showTooltip(getTooltip(), event, `US State: <strong>${source.properties.NAME}</strong>
-                <br>Foreign State: <strong>${target.properties.name}</strong>
-                <br>Number of Passengers: ${route["passengers"]}<br>Number of Flights: ${route["flights"]}`);
-        })
-        .on("mousemove", function(event) {
-            tooltip.style("left", `${event.pageX + 10}px`)
-                    .style("top", `${event.pageY + 10}px`);
-        })
-        .on("mouseout", function(event, d) {
-            d3.select(this)
-                .attr("stroke-width", 1.5)
-                .attr("opacity", 0.9)
-                .attr("stroke", color); 
-            hideTooltip(getTooltip());
-        });
+    const pathNode = d3.geoPath().projection(projection)({
+        type: "LineString",
+        coordinates: coordinates
+    });
 
-    // Corregge l'accesso al nodo path
-    const pathNode = path.node();
-    if (pathNode) {
-        const pathLength = pathNode.getTotalLength();
+    const tempPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    tempPath.setAttribute("d", pathNode);
+    const pathLength = tempPath.getTotalLength();
+    const midPoint = tempPath.getPointAtLength(pathLength / 2);
 
-        // Trova il punto intermedio
-        const midPoint = pathNode.getPointAtLength(pathLength / 2);
+    console.log(`MidPoint calcolato: X=${midPoint.x}, Y=${midPoint.y}`);
 
-        console.log(`Punto medio dell'arco: X=${midPoint.x}, Y=${midPoint.y}`);
+    if (midPoint.y < 0) {
+        console.warn("Il punto medio dell'arco è sopra il limite superiore della mappa.");
+        isOutOfBounds = true;
+    }
 
-        // Verifica se il punto medio è sopra il limite superiore della mappa
-        if (midPoint.y < 0) {
-            console.warn("Il punto medio dell'arco è sopra il limite superiore della mappa.");
+    if (isOutOfBounds) {
+        const data = [
+            { x: projectedSource[0], y: projectedSource[1] },
+            { x: (projectedSource[0] + projectedTarget[0]) / 2, y: projectedSource[1] - 400 }, // 300
+            { x: projectedTarget[0], y: projectedTarget[1] }
+        ];
 
-            path.attr("stroke", "red");
+        /*
+        const data = [
+            { x: projectedSource[0], y: projectedSource[1] },
+            { x: (projectedSource[0] + projectedTarget[0]) *4 / 5, y: projectedSource[1] - 300 },
+            { x: (projectedSource[0] + projectedTarget[0]) / 5, y: projectedSource[1] - 300 },
+            { x: projectedTarget[0], y: projectedTarget[1] }
+        ];
+        */
 
-            svg.append("circle")
-                .attr("cx", midPoint.x)
-                .attr("cy", midPoint.y)
-                .attr("r", 5)
-                .attr("fill", "red")
-                .attr("transform", currentTransform);
-        } else {
-            // Facoltativo: Aggiunge un cerchio blu se non sopra il limite
-            svg.append("circle")
-                .attr("cx", midPoint.x)
-                .attr("cy", midPoint.y)
-                .attr("r", 5)
-                .attr("fill", "blue")
-                .attr("transform", currentTransform);
-        }
+        console.log("Dati per arco rosso (proiettati):", data);
+
+        const line = d3.line()
+            .x(d => d.x)
+            .y(d => d.y)
+            .curve(d3.curveBasis);
+
+        svg.append("path")
+            .attr("d", line(data))
+            .attr("fill", "none")
+            .attr("stroke", "red")
+            .attr("stroke-width", 1.5)
+            .attr("transform", currentTransform);
     } else {
-        console.error("Impossibile accedere al nodo path.");
+        svg.append("path")
+            .datum({
+                type: "LineString",
+                coordinates: coordinates
+            })
+            .attr("d", d3.geoPath().projection(projection))
+            .attr("transform", currentTransform)
+            .attr("fill", "none")
+            .attr("stroke", color)
+            .attr("opacity", 0.9)
+            .attr("stroke-width", 1.5)
+            .attr("class", `arc-${source.properties.NAME.replace(/\s+/g, '-')}`)
+            .on("mouseover", function(event, d) {
+                d3.select(this)
+                    .attr("stroke-width", 3)
+                    .attr("stroke", "red") 
+                    .attr("opacity", 1)
+                    .raise();
+                showTooltip(getTooltip(), event, `US State: <strong>${source.properties.NAME}</strong>
+                    <br>Foreign State: <strong>${target.properties.name}</strong>
+                    <br>Number of Passengers: ${route["passengers"]}<br>Number of Flights: ${route["flights"]}`);
+            })
+            .on("mousemove", function(event) {
+                tooltip.style("left", `${event.pageX + 10}px`)
+                        .style("top", `${event.pageY + 10}px`);
+            })
+            .on("mouseout", function(event, d) {
+                d3.select(this)
+                    .attr("stroke-width", 1.5)
+                    .attr("opacity", 0.9)
+                    .attr("stroke", color); 
+                hideTooltip(getTooltip());
+            });
     }
 }
-
-
-
 
 
 function drawConnections() {
