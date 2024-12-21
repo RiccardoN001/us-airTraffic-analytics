@@ -229,9 +229,6 @@ function calculateDegrees() {
     let selectedYear = document.getElementById("yearSlider").value;
     let selectedMonth = document.getElementById("monthSlider").value;
 
-    console.log("Selected Year:", selectedYear);
-    console.log("Selected Month:", selectedMonth);
-
     degree = routes.filter((route) => route.year == selectedYear && route.month == selectedMonth);
 
     degree = degree.reduce((acc, { US_state, FG_state }) => {
@@ -268,9 +265,11 @@ function calculateDegrees() {
         
             return fillColor;
         });
+    /*
     console.log("Degrees:", selectedTimeDegrees);
     console.log("Number of elements:", Object.keys(selectedTimeDegrees).length);
     console.log("Degree massimo:", Math.max(...Object.values(selectedTimeDegrees)));
+    */
 } 
 
 function calculateMaxAbsoluteDegree(){

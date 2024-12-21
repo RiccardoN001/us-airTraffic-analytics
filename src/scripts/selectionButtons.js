@@ -65,7 +65,6 @@ const createSelectionButtonsContainer = () => {
 
     //Event Listener per i pulsanti
     document.getElementById("button1").addEventListener("click", () => {
-        console.log("Seleziona tutti gli stati");
         let usStates = d3.selectAll(".us-states");
         usStates.each(function() {
             let state = d3.select(this);

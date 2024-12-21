@@ -98,9 +98,6 @@ function drawArc(source, target, color = "black", route) {
     const projectedSource = projection(sourceCentroid);
     const projectedTarget = projection(targetCentroid);
 
-    console.log(`Centroidi calcolati: sourceCentroid=${sourceCentroid}, targetCentroid=${targetCentroid}`);
-    console.log(`Centroidi proiettati: projectedSource=${projectedSource}, projectedTarget=${projectedTarget}`);
-
     let isOutOfBounds = false;
     const coordinates = [sourceCentroid, targetCentroid];
 
@@ -114,30 +111,42 @@ function drawArc(source, target, color = "black", route) {
     const pathLength = tempPath.getTotalLength();
     const midPoint = tempPath.getPointAtLength(pathLength / 2);
 
-    console.log(`MidPoint calcolato: X=${midPoint.x}, Y=${midPoint.y}`);
-
     if (midPoint.y < 0) {
-        console.warn("Il punto medio dell'arco è sopra il limite superiore della mappa.");
         isOutOfBounds = true;
     }
 
     if (isOutOfBounds) {
-        const data = [
-            { x: projectedSource[0], y: projectedSource[1] },
-            { x: (projectedSource[0] + projectedTarget[0]) / 2, y: projectedSource[1] - 400 }, // 300
-            { x: projectedTarget[0], y: projectedTarget[1] }
-        ];
+        let data;
 
-        /*
-        const data = [
-            { x: projectedSource[0], y: projectedSource[1] },
-            { x: (projectedSource[0] + projectedTarget[0]) *4 / 5, y: projectedSource[1] - 300 },
-            { x: (projectedSource[0] + projectedTarget[0]) / 5, y: projectedSource[1] - 300 },
-            { x: projectedTarget[0], y: projectedTarget[1] }
-        ];
-        */
-
-        console.log("Dati per arco rosso (proiettati):", data);
+        if(projectedSource[0] < projectedTarget[0]) {
+            if(source.properties.NAME === "Alaska") {
+                data = [
+                    { x: projectedSource[0], y: projectedSource[1] },
+                    { x: projectedSource[0] + (projectedTarget[0] - projectedSource[0]) * (1/6 * ((projectedTarget[0] - projectedSource[0]) / 600)), y: projectedSource[1] - ((projectedTarget[0] - projectedSource[0]) / 600) * 80 },
+                    { x: projectedSource[0] + (projectedTarget[0] - projectedSource[0]) / 2, y: projectedSource[1] - 155 },
+                    { x: projectedSource[0] + (projectedTarget[0] - projectedSource[0]) * (5/6 * ((projectedTarget[0] - projectedSource[0]) / 600)), y: projectedSource[1] - ((projectedTarget[0] - projectedSource[0]) / 600) * 80 },
+                    { x: projectedTarget[0], y: projectedTarget[1] }
+                ];  
+            }
+            else{
+                data = [
+                    { x: projectedSource[0], y: projectedSource[1] },
+                    { x: projectedSource[0] + (projectedTarget[0] - projectedSource[0]) * (1/6 * ((projectedTarget[0] - projectedSource[0]) / 600)), y: projectedSource[1] - ((projectedTarget[0] - projectedSource[0]) / 600) * 280 },
+                    { x: projectedSource[0] + (projectedTarget[0] - projectedSource[0]) / 2, y: projectedSource[1] - 355 },
+                    { x: projectedSource[0] + (projectedTarget[0] - projectedSource[0]) * (5/6 * ((projectedTarget[0] - projectedSource[0]) / 600)), y: projectedSource[1] - ((projectedTarget[0] - projectedSource[0]) / 600) * 280 },
+                    { x: projectedTarget[0], y: projectedTarget[1] }
+                ];  
+            }       
+        } 
+        else {
+            data = [
+                { x: projectedSource[0], y: projectedSource[1] },
+                { x: (projectedSource[0] + projectedTarget[0]) * (4/5 * ((projectedSource[0] - projectedTarget[0]) / 600)), y: projectedSource[1] - ((projectedSource[0] - projectedTarget[0]) / 600) * 250 },
+                { x: (projectedSource[0] + projectedTarget[0]) /2, y: projectedSource[1] - ((projectedSource[0] - projectedTarget[0]) / 600) * 350 },
+                { x: (projectedSource[0] + projectedTarget[0]) * (1/5 * ((projectedSource[0] - projectedTarget[0]) / 600)), y: projectedSource[1] - ((projectedSource[0] - projectedTarget[0]) / 600) * 250 },
+                { x: projectedTarget[0], y: projectedTarget[1] }
+            ];
+        }
 
         const line = d3.line()
             .x(d => d.x)
@@ -146,11 +155,35 @@ function drawArc(source, target, color = "black", route) {
 
         svg.append("path")
             .attr("d", line(data))
+            .attr("transform", currentTransform)
             .attr("fill", "none")
-            .attr("stroke", "red")
+            .attr("stroke", color)
+            .attr("opacity", 0.9)
             .attr("stroke-width", 1.5)
-            .attr("transform", currentTransform);
-    } else {
+            .attr("class", `arc-${source.properties.NAME.replace(/\s+/g, '-')}`)
+            .on("mouseover", function(event, d) {
+                d3.select(this)
+                    .attr("stroke-width", 3)
+                    .attr("stroke", "red") 
+                    .attr("opacity", 1)
+                    .raise();
+                showTooltip(getTooltip(), event, `US State: <strong>${source.properties.NAME}</strong>
+                    <br>Foreign State: <strong>${target.properties.name}</strong>
+                    <br>Number of Passengers: ${route["passengers"]}<br>Number of Flights: ${route["flights"]}`);
+            })
+            .on("mousemove", function(event) {
+                tooltip.style("left", `${event.pageX + 10}px`)
+                        .style("top", `${event.pageY + 10}px`);
+            })
+            .on("mouseout", function(event, d) {
+                d3.select(this)
+                    .attr("stroke-width", 1.5)
+                    .attr("opacity", 0.9)
+                    .attr("stroke", color); 
+                hideTooltip(getTooltip());
+            });
+    } 
+    else {
         svg.append("path")
             .datum({
                 type: "LineString",
