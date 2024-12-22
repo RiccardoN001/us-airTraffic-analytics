@@ -74,6 +74,8 @@ let maxPassengers = 0;
 let minPassengers = 0;
 let maxFlights = 0;
 let minFlights = 0;
+let aggregatedRoutesCache = null;
+
 
 function getSelectedStatesArray(){
     return selectedStatesArray;
@@ -226,52 +228,39 @@ Promise.all([
     );
 
 function calculateDegrees() {
-    let selectedYear = document.getElementById("yearSlider").value;
-    let selectedMonth = document.getElementById("monthSlider").value;
+    if (!aggregatedRoutesCache) {
+        console.error("Aggregated routes cache is empty. Call updateFilteredAndAggregatedRoutes first.");
+        return;
+    }
 
-    console.log("Selected Year:", selectedYear);
-    console.log("Selected Month:", selectedMonth);
-
-    degree = routes.filter((route) => route.year == selectedYear && route.month == selectedMonth);
-
-    degree = degree.reduce((acc, { US_state, FG_state }) => {
-        // aggiunge lo stato collegato al set associato allo stato americano
+    const degree = Object.values(aggregatedRoutesCache).reduce((acc, { US_state, FG_state }) => {
         acc[US_state] = acc[US_state] || new Set();
         acc[US_state].add(FG_state);
         return acc;
-    }, {}); 
+    }, {});
 
     selectedTimeDegrees = Object.fromEntries(
-        Object.entries(degree).map(([state, degree]) => [state, degree.size])
+        Object.entries(degree).map(([state, connections]) => [state, connections.size])
     );
 
-    //normalizza i gradi di collegamento
-    let maxValue = Math.max(...Object.values(selectedTimeDegrees));
-
-    //scala sequenziale logaritmica
+    const maxValue = Math.max(...Object.values(selectedTimeDegrees));
     const colorScale = d3.scaleSequentialLog()
         .domain([1, maxValue])
         .interpolator(d3.interpolateBlues);
-    updateColorBar(0, Math.max(...Object.values(selectedTimeDegrees)), d3.scaleLog().domain([0, maxValue]).range(["#FFFFFF, #08306b"]));
 
+    updateColorBar(0, maxValue, d3.scaleLog().domain([0, maxValue]).range(["#FFFFFF", "#08306b"]));
 
     svg.selectAll(".us-states")
         .attr("fill", (d) => {
             const stateName = d.properties.NAME;
             const value = selectedTimeDegrees[stateName];
-        
-            let fillColor = "white";
-        
-            if (value != undefined && value != null) {
-                fillColor = colorScale(value);
-            }
-        
-            return fillColor;
+            return value ? colorScale(value) : "white";
         });
+
     console.log("Degrees:", selectedTimeDegrees);
-    console.log("Number of elements:", Object.keys(selectedTimeDegrees).length);
-    console.log("Degree massimo:", Math.max(...Object.values(selectedTimeDegrees)));
-} 
+}
+    
+    
 
 function calculateMaxAbsoluteDegree(){
     //per ogni anno e per ogni mese calcola il grado massimo di collegamenti, e salva il massimo assoluto
@@ -321,3 +310,33 @@ function calculateMaxPassengersAndFlights() {
     maxPassengers = maxPassengersTemp;
     minPassengers = minPassengersTemp;
 }
+
+function getMonthNumber(monthName) {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return months.indexOf(monthName) + 1;
+}
+
+function updateFilteredAndAggregatedRoutes() {
+    const selectedYearLow = parseInt(document.getElementById("year-label").innerText.split(" - ")[0], 10);
+    const selectedYearHigh = parseInt(document.getElementById("year-label").innerText.split(" - ")[1], 10);
+    const selectedMonthLow = getMonthNumber(document.getElementById("month-label").innerText.split(" - ")[0]);
+    const selectedMonthHigh = getMonthNumber(document.getElementById("month-label").innerText.split(" - ")[1]);
+
+    aggregatedRoutesCache = routes
+        .filter(route =>
+            route.year >= selectedYearLow &&
+            route.year <= selectedYearHigh &&
+            route.month >= selectedMonthLow &&
+            route.month <= selectedMonthHigh
+        )
+        .reduce((acc, { US_state, FG_state, passengers, flights }) => {
+            const key = `${US_state}-${FG_state}`;
+            if (!acc[key]) {
+                acc[key] = { US_state, FG_state, passengers: 0, flights: 0 };
+            }
+            acc[key].passengers += passengers;
+            acc[key].flights += flights;
+            return acc;
+        }, {});
+}
+

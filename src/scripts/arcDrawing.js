@@ -175,16 +175,16 @@ function drawArc(source, target, color = "black", route) {
 
 
 function drawConnections() {
-    // pulisce gli archi esistenti per evitare duplicati
+    if (!aggregatedRoutesCache) {
+        console.error("Aggregated routes cache is empty. Call updateFilteredAndAggregatedRoutes first.");
+        return;
+    }
+
     svg.selectAll("[class^='arc-']").remove();
 
     selectedStatesArray.forEach((selectedState) => {
         selectedState.attr("fill", "#4682B4");
 
-        const selectedYear = document.getElementById("yearSlider").value;
-        const selectedMonth = document.getElementById("monthSlider").value;
-
-        
         const source = usaData.features.find(
             (d) => d.properties.NAME === selectedState.data()[0].properties.NAME
         );
@@ -194,11 +194,8 @@ function drawConnections() {
             return;
         }
 
-        const degree = routes.filter(
-            (route) =>
-                route.year == selectedYear &&
-                route.month == selectedMonth &&
-                route.US_state === source.properties.NAME
+        const degree = Object.values(aggregatedRoutesCache).filter(
+            route => route.US_state === source.properties.NAME
         );
 
         const selectedArc = getSelectedArc();
@@ -206,22 +203,15 @@ function drawConnections() {
 
         if (selectedArc === "passengers") {
             valueField = "passengers";
-            d3.select("#lower-container").style("display", "block");
             colorScale = d3.scaleSequential(t => d3.interpolateReds(t + 0.2))
                            .domain([minPassengers, maxPassengers]);
             updateColorBar(minPassengers, maxPassengers, d3.scaleLinear().domain([0, 1]).range(["#fcbaa1", "#67000d"]));
         } 
         else if (selectedArc === "flights") {
             valueField = "flights";
-            d3.select("#lower-container").style("display", "block");
             colorScale = d3.scaleSequential(t => d3.interpolateReds(t + 0.2))
                            .domain([minFlights, maxFlights]);
             updateColorBar(minFlights, maxFlights, d3.scaleLinear().domain([0, 1]).range(["#fcbaa1", "#67000d"]));
-        }
-        else {
-            valueField = "static";
-            colorScale = null;
-            d3.select("#lower-container").style("display", "none");
         }
 
         degree.forEach((route) => {
@@ -234,24 +224,18 @@ function drawConnections() {
                 return;
             }
 
-            let arcColor;
-
-            if (valueField === "static") {
-                arcColor = "#000000";
-            } else {
-                const routeValue = route[valueField];
-                arcColor = colorScale ? colorScale(routeValue) : "#000000";
-            }
-
+            const arcColor = colorScale ? colorScale(route[valueField]) : "#000000";
             drawArc(source, target, arcColor, route);
 
-            // contrassegna lo stato estero
             svg.selectAll("path")
                 .filter((d) => d && d.properties && d.properties.name === route.FG_state)
                 .attr("fill", "#4682B4");
         });
     });
 }
+
+
+
 
 function reRaiseArcs() {
     svg.selectAll("[class^='arc-']").raise();

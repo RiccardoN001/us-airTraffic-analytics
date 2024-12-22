@@ -80,15 +80,16 @@ const createSliderContainer = () => {
     sliderContainer.appendChild(monthWrapper);
 
     // Inizializza gli slider DOPO aver aggiunto i div al DOM
-    const yearSlider = new DualVRangeBar("year-slider", {
+    let yearSlider = new DualVRangeBar("year-slider", {
         lowerBound: 1990,
         upperBound: 2020,
-        lower: 1990,
+        lower: 2020,
         upper: 2020,
         minSpan: 0,
+        maxSpan: 0,
     });
 
-    const monthSlider = new DualVRangeBar("month-slider", {
+    let monthSlider = new DualVRangeBar("month-slider", {
         lowerBound: 1,
         upperBound: 12,
         lower: 1,
@@ -96,6 +97,7 @@ const createSliderContainer = () => {
         minSpan: 0,
     });
 
+    updateFilteredAndAggregatedRoutes();
     
 
     // Funzione per aggiornare le etichette
@@ -112,13 +114,42 @@ const createSliderContainer = () => {
 
     };
 
-    yearSlider.addEventListener("update", updateLabels);
-    monthSlider.addEventListener("update", updateLabels);
+    yearSlider.addEventListener("update", () => {
+
+        updateLabels();
+        updateFilteredAndAggregatedRoutes();
+
+        if (selectedStatesArray.length == 0) {
+            calculateDegrees();
+        } else {
+            //calculateMaxPassengersAndFlights();
+            drawConnections();
+            updateForeignStateColors();
+        }
+    });
+
+    monthSlider.addEventListener("update", () => {
+        updateLabels();
+        updateFilteredAndAggregatedRoutes();
+
+        if (selectedStatesArray.length == 0) {
+            calculateDegrees();
+        } else {
+            //calculateMaxPassengersAndFlights();
+            drawConnections();
+            updateForeignStateColors();
+        }
+    });
 
     // Funzione per ottenere il nome del mese
     function getMonthName(monthNumber) {
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         return months[monthNumber - 1];
+    }
+    // Funzione per ottenere il numero del mese dal nome
+    function getMonthNumber(monthName) {
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return months.indexOf(monthName) + 1;
     }
 };
 
