@@ -16,7 +16,8 @@ function showTooltip(tooltip, event, content) {
     tooltip.html(content)
         .style("left", `${event.pageX + 10}px`)
         .style("top", `${event.pageY + 10}px`)
-        .style("opacity", 1);
+        .style("opacity", 1)
+        .raise();
 }
 
 function hideTooltip(tooltip) {
