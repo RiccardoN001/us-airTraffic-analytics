@@ -192,7 +192,7 @@ function drawConnections() {
     svg.selectAll("[class^='arc-']").remove();
 
     selectedStatesArray.forEach((selectedState) => {
-        selectedState.attr("fill", " #4682B4"); // #36648B
+        selectedState.attr("fill", " rgb(64, 119, 164)"); // #36648B
 
         const selectedYear = document.getElementById("yearSlider").value;
         const selectedMonth = document.getElementById("monthSlider").value;
