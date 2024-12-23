@@ -244,13 +244,21 @@ function calculateDegrees() {
 
     //normalizza i gradi di collegamento
     let maxValue = Math.max(...Object.values(selectedTimeDegrees));
-
+    /*
     //scala sequenziale logaritmica
     const colorScale = d3.scaleSequentialLog()
         .domain([1, maxValue])
         .interpolator(d3.interpolateBlues);
     updateColorBar(0, Math.max(...Object.values(selectedTimeDegrees)), d3.scaleLog().domain([0, maxValue]).range(["#FFFFFF, #08306b"]));
-
+    */
+    const logScale = d3.scaleLog()
+    .domain([1, maxValue])
+    .range([0, 1]); 
+    colorScale = t => {
+        if (t === 0) return d3.interpolateBlues(0); // Mappa 0 al colore più chiaro
+        return d3.interpolateBlues(logScale(Math.max(t, 1))); // Usa il logaritmo per i valori ≥ 1
+    };
+    updateColorBar(0, maxValue, t => (t === 0 ? " #FFFFFF" : colorScale(t))); // FARLA COSI E' PIU' CORRETTO
 
     svg.selectAll(".us-states")
         .attr("fill", (d) => {

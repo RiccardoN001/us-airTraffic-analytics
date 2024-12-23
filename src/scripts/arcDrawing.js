@@ -226,7 +226,7 @@ function drawConnections() {
     svg.selectAll("[class^='arc-']").remove();
 
     selectedStatesArray.forEach((selectedState) => {
-        selectedState.attr("fill", "#4682B4");
+        selectedState.attr("fill", " #4682B4"); // #36648B
 
         const selectedYear = document.getElementById("yearSlider").value;
         const selectedMonth = document.getElementById("monthSlider").value;
@@ -254,16 +254,20 @@ function drawConnections() {
         if (selectedArc === "passengers") {
             valueField = "passengers";
             d3.select("#lower-container").style("display", "block");
-            colorScale = d3.scaleSequential(t => d3.interpolateReds(t + 0.2))
-                           .domain([minPassengers, maxPassengers]);
-            updateColorBar(minPassengers, maxPassengers, d3.scaleLinear().domain([0, 1]).range(["#fcbaa1", "#67000d"]));
+            const logScale = d3.scaleLog()
+                .domain([minPassengers, maxPassengers])
+                .range([0, 1]);
+            colorScale = t => d3.interpolateReds(logScale(t)); // si può togliere anche -0.1 per avere un colore più chiaro
+            updateColorBar(minPassengers, maxPassengers, colorScale);
         } 
         else if (selectedArc === "flights") {
             valueField = "flights";
             d3.select("#lower-container").style("display", "block");
-            colorScale = d3.scaleSequential(t => d3.interpolateReds(t + 0.2))
-                           .domain([minFlights, maxFlights]);
-            updateColorBar(minFlights, maxFlights, d3.scaleLinear().domain([0, 1]).range(["#fcbaa1", "#67000d"]));
+            const logScale = d3.scaleLog()
+                .domain([minFlights, maxFlights])
+                .range([0, 1]);
+            colorScale = t => d3.interpolateGreens(logScale(t));
+            updateColorBar(minFlights, maxFlights, colorScale);
         }
         else {
             valueField = "static";
@@ -291,11 +295,6 @@ function drawConnections() {
             }
 
             drawArc(source, target, arcColor, route);
-
-            // contrassegna lo stato estero
-            svg.selectAll("path")
-                .filter((d) => d && d.properties && d.properties.name === route.FG_state)
-                .attr("fill", "#4682B4");
         });
     });
 }
@@ -332,7 +331,7 @@ function updateForeignStateColors() {
             if (target) {
                 svg.selectAll("path")
                     .filter(d => d && d.properties && d.properties.name === route.FG_state)
-                    .attr("fill", "#4682B4");
+                    .attr("fill", " #7AAFD4"); // #36648B semmai si possono fare piu scuri gli stati US
             }
         });
     });

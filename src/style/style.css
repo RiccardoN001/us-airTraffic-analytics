@@ -3,6 +3,11 @@
     height: 96vh;
 }
 
+html, body {
+    overflow: hidden; /* Rimuove la barra di scorrimento */
+    height: 100%; /* Garantisce che l'intera pagina riempia lo schermo */
+}
+
 span {
     font-family: 'Heebo', sans-serif;
     font-size: 1.3125rem;

@@ -75,7 +75,9 @@ const createColormapContainer = () => {
 
 function updateColorBar(minValue, maxValue, colorScale) {
     const colorBar = document.getElementById("color-bar");
-    colorBar.style.background = `linear-gradient(to right, ${colorScale(0)}, ${colorScale(1)}`;
+    const startColor = colorScale(minValue); 
+    const endColor = colorScale(maxValue); 
+    colorBar.style.background = `linear-gradient(to right, ${startColor}, ${endColor})`;
     document.getElementById("labelStartColormap").textContent = minValue;
     document.getElementById("labelEndColormap").textContent = maxValue;
 }
