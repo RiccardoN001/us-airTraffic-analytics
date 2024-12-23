@@ -13,13 +13,13 @@ function zoomToAmerica() {
     });
 
     const [[x0, y0], [x1, y1]] = usBounds;
-    const offsetX = 100;  
-    const offsetY = 75;  
+    const offsetX = 70;  
+    const offsetY = 70;  
 
     // calcola centro e scala
     const dx = x1 - x0;
     const dy = y1 - y0;
-    const scale = Math.min(width / dx, height / dy) * 0.55;  // scala ridotta
+    const scale = Math.min(width / dx, height / dy) * 0.46;  // scala ridotta
     const translate = [
         width / 2 - scale * (x0 + x1) / 2 + offsetX,
         height / 2 - scale * (y0 + y1) / 2 + offsetY
