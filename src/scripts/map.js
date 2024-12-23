@@ -245,10 +245,7 @@ function calculateDegrees() {
     const logScale = d3.scaleLog()
         .domain([1, maxValue])
         .range([0, 1]); 
-    const colorScale = t => {
-        if (t === 0) return "#FFFFFF";
-        return d3.interpolateBlues(logScale(Math.max(t, 1)));
-    };
+    const colorScale = t => d3.interpolateBlues(logScale(Math.max(t, 1)));
     updateColorBar(0, maxValue, colorScale);
 
     svg.selectAll(".us-states")
