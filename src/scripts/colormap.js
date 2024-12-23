@@ -28,6 +28,7 @@ const createColormapContainer = () => {
     colormapContainer.style.flexDirection = "column";
     colormapContainer.style.alignItems = "center";
     colormapContainer.style.width = "90%";
+    colormapContainer.style.paddingLeft = "5px";
 
     // Barra della colormap (con estremi arrotondati)
     const colorBar = document.createElement("div");
