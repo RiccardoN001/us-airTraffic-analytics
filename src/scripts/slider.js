@@ -139,7 +139,8 @@ const createSliderContainer = () => {
 
         if (selectedStatesArray.length == 0) {
             calculateDegrees();
-        } else {
+        } 
+        else {
             calculateMaxPassengersAndFlights();
             drawConnections();
             updateForeignStateColors();

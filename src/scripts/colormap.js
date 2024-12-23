@@ -16,7 +16,7 @@ const createColormapContainer = () => {
     lowerContainer.style.right = "0";
     lowerContainer.style.height = `${containerHeight / 8}px`; 
     lowerContainer.style.width = `${document.body.clientWidth - containerWidth}px`;
-    lowerContainer.style.display = "flex";
+    lowerContainer.style.display = "block";
     lowerContainer.style.flexDirection = "column";
     lowerContainer.style.alignItems = "center";
     lowerContainer.style.justifyContent = "center";
@@ -34,7 +34,6 @@ const createColormapContainer = () => {
     colorBar.id = "color-bar";
     colorBar.style.width = "100%";
     colorBar.style.height = "20px";
-    colorBar.style.background = "linear-gradient(to right, #FFFFFF, #08306b)";
     colorBar.style.borderRadius = "10px"; 
     colorBar.style.border = "2px solid #ccc";
 
@@ -75,9 +74,21 @@ const createColormapContainer = () => {
 
 function updateColorBar(minValue, maxValue, colorScale) {
     const colorBar = document.getElementById("color-bar");
-    const startColor = colorScale(minValue); 
-    const endColor = colorScale(maxValue); 
-    colorBar.style.background = `linear-gradient(to right, ${startColor}, ${endColor})`;
+
+    // numero di fermate per il gradiente, modificabile
+    const steps = 10;
+    let gradientStops = [];
+
+    for (let i = 0; i <= steps; i++) {
+        // calcola la posizione lungo la scala logaritmica
+        const t = Math.pow(10, Math.log10(minValue + 1) + (i / steps) * (Math.log10(maxValue) - Math.log10(minValue + 1)));
+        const color = colorScale(t);
+        const position = (i / steps) * 100;
+        gradientStops.push(`${color} ${position}%`);
+    }
+
+    colorBar.style.background = `linear-gradient(to right, ${gradientStops.join(", ")})`;
+
     document.getElementById("labelStartColormap").textContent = minValue;
     document.getElementById("labelEndColormap").textContent = maxValue;
 }

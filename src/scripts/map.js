@@ -182,7 +182,6 @@ Promise.all([
 
             if(selectedStatesArray.length == 0){
                 svg.selectAll(".us-states").attr("fill", "#b3cde0");
-                document.getElementById("color-bar").style.background = "linear-gradient(to right, #fcbaa1, #67000d)";
                 zoomOutWorld();
             }
 
@@ -200,7 +199,6 @@ Promise.all([
                     .remove();
 
                 if(selectedStatesArray.length == 0){
-                    document.getElementById("color-bar").style.background = "linear-gradient(to right, #FFFFFF, #08306b)";
                     calculateDegrees();
                     zoomToAmerica();
                 }
@@ -212,18 +210,18 @@ Promise.all([
             updateForeignStateColors();
         });
             
-        svg.selectAll(".us-nodes")
-            .data(usaData.features)
-            .enter()
-            .append("circle")
-            .attr("class", "us-nodes")
-            .attr("cx", d => projection(getValidCentroid(d))[0])
-            .attr("cy", d => projection(getValidCentroid(d))[1])
-            .attr("r", 0);
-    })
-    .catch((error) =>
-        console.error("Errore nel caricamento dei dati del mondo:", error)
-    );
+    svg.selectAll(".us-nodes")
+        .data(usaData.features)
+        .enter()
+        .append("circle")
+        .attr("class", "us-nodes")
+        .attr("cx", d => projection(getValidCentroid(d))[0])
+        .attr("cy", d => projection(getValidCentroid(d))[1])
+        .attr("r", 0);
+})
+.catch((error) =>
+    console.error("Errore nel caricamento dei dati del mondo:", error)
+);
 
 function calculateDegrees() {
     let selectedYear = document.getElementById("yearSlider").value;
@@ -242,23 +240,16 @@ function calculateDegrees() {
         Object.entries(degree).map(([state, degree]) => [state, degree.size])
     );
 
-    //normalizza i gradi di collegamento
     let maxValue = Math.max(...Object.values(selectedTimeDegrees));
-    /*
-    //scala sequenziale logaritmica
-    const colorScale = d3.scaleSequentialLog()
-        .domain([1, maxValue])
-        .interpolator(d3.interpolateBlues);
-    updateColorBar(0, Math.max(...Object.values(selectedTimeDegrees)), d3.scaleLog().domain([0, maxValue]).range(["#FFFFFF, #08306b"]));
-    */
+
     const logScale = d3.scaleLog()
-    .domain([1, maxValue])
-    .range([0, 1]); 
-    colorScale = t => {
-        if (t === 0) return d3.interpolateBlues(0); // Mappa 0 al colore più chiaro
-        return d3.interpolateBlues(logScale(Math.max(t, 1))); // Usa il logaritmo per i valori ≥ 1
+        .domain([1, maxValue])
+        .range([0, 1]); 
+    const colorScale = t => {
+        if (t === 0) return "#FFFFFF";
+        return d3.interpolateBlues(logScale(Math.max(t, 1)));
     };
-    updateColorBar(0, maxValue, t => (t === 0 ? " #FFFFFF" : colorScale(t))); // FARLA COSI E' PIU' CORRETTO
+    updateColorBar(0, maxValue, colorScale);
 
     svg.selectAll(".us-states")
         .attr("fill", (d) => {

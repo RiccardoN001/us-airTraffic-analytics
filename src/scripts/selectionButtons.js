@@ -81,7 +81,6 @@ const createSelectionButtonsContainer = () => {
     document.getElementById("button2").addEventListener("click", () => {
         removeAllStatesFromSelectedArray();
         drawConnections();
-        document.getElementById("color-bar").style.background = "linear-gradient(to right, #FFFFFF, #08306b)";
         calculateDegrees();
         zoomToAmerica();
         updateForeignStateColors();

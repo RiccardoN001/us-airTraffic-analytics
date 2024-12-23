@@ -257,7 +257,7 @@ function drawConnections() {
             const logScale = d3.scaleLog()
                 .domain([minPassengers, maxPassengers])
                 .range([0, 1]);
-            colorScale = t => d3.interpolateReds(logScale(t)); // si può togliere anche -0.1 per avere un colore più chiaro
+            colorScale = t => d3.interpolateReds(logScale(t));
             updateColorBar(minPassengers, maxPassengers, colorScale);
         } 
         else if (selectedArc === "flights") {
