@@ -1,37 +1,3 @@
-let availableColors = [
-    "#6B8E23", // Olive Green
-    "#4682B4", // Steel Blue
-    "#D2B48C", // Tan
-    "#708090", // Slate Gray
-    "#8FBC8F", // Dark Sea Green
-    "#B0C4DE", // Light Steel Blue
-    "#A0522D", // Sienna
-    "#C0C0C0"  // Silver
-  ];
-  
-let usedColors = [];
-  
-function assignColor() {
-    if (availableColors.length > 0) {
-        const color = availableColors.pop(); // prendi un colore disponibile
-        usedColors.push(color); // sposta il colore nella lista dei colori usati
-        return color;
-}
-
-// se i colori sono esauriti, ritorna un colore di default
-console.warn("No more colors available!");
-return "#000000"; // nero come fallback
-}
-  
-
-function releaseColor(color) {
-    const index = usedColors.indexOf(color);
-    if (index > -1) {
-        usedColors.splice(index, 1); // rimuovi il colore dai colori usati
-        availableColors.push(color); // aggiungilo ai colori disponibili
-    }
-}
-  
 // funzione per calcolare il bounding box del pezzo più grande
 function getLargestPolygonBounds(feature) {
     if (feature.geometry.type === "Polygon") {
@@ -266,7 +232,7 @@ function drawConnections() {
             const logScale = d3.scaleLog()
                 .domain([minFlights, maxFlights])
                 .range([0, 1]);
-            colorScale = t => d3.interpolateGreens(logScale(t));
+            colorScale = t => d3.interpolateOranges(logScale(t));
             updateColorBar(minFlights, maxFlights, colorScale);
         }
         else {
@@ -331,7 +297,7 @@ function updateForeignStateColors() {
             if (target) {
                 svg.selectAll("path")
                     .filter(d => d && d.properties && d.properties.name === route.FG_state)
-                    .attr("fill", " #7AAFD4"); // #36648B semmai si possono fare piu scuri gli stati US
+                    .attr("fill", "#7AAFD4");
             }
         });
     });

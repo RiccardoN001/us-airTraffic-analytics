@@ -194,7 +194,6 @@ Promise.all([
                 svg.selectAll(`.arc-${d.properties.NAME.replace(/\s+/g, '-')}`)
                     .each(function() {
                         const color = d3.select(this).attr("stroke");
-                        releaseColor(color);
                     })
                     .remove();
 
