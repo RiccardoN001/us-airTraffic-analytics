@@ -96,9 +96,14 @@ Promise.all([
     usaData = usa;
     states = reportData.nodes;
     routes = reportData.edges;
+    createSliderContainer();
+    createRadioButtonContainer();
+    createColormapContainer();
+    createSelectionButtonsContainer();
+  
 
     zoomToAmerica();
-
+    
     //disegna la mappa del mondo
     svg.selectAll("path")
         .data(worldData.features)
@@ -198,6 +203,7 @@ Promise.all([
                     .remove();
 
                 if(selectedStatesArray.length == 0){
+                    d3.select("#lower-container").style("display", "block");
                     calculateDegrees();
                     zoomToAmerica();
                 }
@@ -208,7 +214,9 @@ Promise.all([
             }            
             updateForeignStateColors();
         });
-            
+
+    calculateDegrees();     
+
     svg.selectAll(".us-nodes")
         .data(usaData.features)
         .enter()

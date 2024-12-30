@@ -121,6 +121,7 @@ const createSliderContainer = () => {
         if (selectedStatesArray.length == 0) {
             calculateDegrees();
         } else {
+            calculateDegreesOnly();
             calculateMaxPassengersAndFlights();
             drawConnections();
             updateForeignStateColors();
@@ -141,6 +142,7 @@ const createSliderContainer = () => {
             calculateDegrees();
         } 
         else {
+            calculateDegreesOnly();
             calculateMaxPassengersAndFlights();
             drawConnections();
             updateForeignStateColors();
@@ -158,4 +160,22 @@ function updateSliderLabels() {
 function getMonthName(monthNumber) {
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     return months[monthNumber - 1]; 
+}
+
+function calculateDegreesOnly() {
+    let selectedYear = document.getElementById("yearSlider").value;
+    let selectedMonth = document.getElementById("monthSlider").value;
+
+    degree = routes.filter((route) => route.year == selectedYear && route.month == selectedMonth);
+
+    degree = degree.reduce((acc, { US_state, FG_state }) => {
+        // aggiunge lo stato collegato al set associato allo stato americano
+        acc[US_state] = acc[US_state] || new Set();
+        acc[US_state].add(FG_state);
+        return acc;
+    }, {}); 
+
+    selectedTimeDegrees = Object.fromEntries(
+        Object.entries(degree).map(([state, degree]) => [state, degree.size])
+    )
 }

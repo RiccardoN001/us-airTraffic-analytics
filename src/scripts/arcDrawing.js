@@ -302,3 +302,8 @@ function updateForeignStateColors() {
         });
     });
 }
+
+function getSelectedArc() {
+    const selectedRadio = document.querySelector('input[name="arcSelection"]:checked');
+    return selectedRadio ? selectedRadio.value : null;
+}

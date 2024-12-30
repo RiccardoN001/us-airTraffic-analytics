@@ -81,6 +81,7 @@ const createSelectionButtonsContainer = () => {
     document.getElementById("button2").addEventListener("click", () => {
         removeAllStatesFromSelectedArray();
         drawConnections();
+        d3.select("#lower-container").style("display", "block");
         calculateDegrees();
         zoomToAmerica();
         updateForeignStateColors();
