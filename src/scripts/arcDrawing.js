@@ -254,7 +254,7 @@ function drawConnections() {
             let arcColor;
 
             if (valueField === "static") {
-                arcColor = "#000000";
+                arcColor = "#ab0e0e";
             } else {
                 const routeValue = route[valueField];
                 arcColor = colorScale ? colorScale(routeValue) : "#000000";
